@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import choice
+from utils import choice, possible_directions, get_distance_between
 
 __all__ = ["World"]
 
@@ -44,7 +44,7 @@ class World:
                 if actor.type == 'target' and other_actor.type == 'patrol':
                     if other_actor.position in actor.view_area:
                         obs.append(other_actor)
-                    if actor.get_distance_between(actor.position, other_actor.position) == 1:
+                    if get_distance_between(actor.limit_board, actor.position, other_actor.position) == 1:
                         nb_patrol_around_target += 1
             if nb_patrol_around_target >= 2:
                 terminal_state = True
@@ -52,7 +52,7 @@ class World:
             actions.append(action)
             if np.random.rand() < self.noise:
                 # We select a position at random and not the one selected
-                action = choice(actor.possible_directions())
+                action = choice(possible_directions(actor.limit_board, actor.position))
             actor.set_position(action)
         return actions, terminal_state
 
