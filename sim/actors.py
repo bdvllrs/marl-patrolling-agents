@@ -8,7 +8,7 @@ class Actor:
     type_id = None
     type = None
     position = None
-    color = 'red'
+    color = "red"
     limit_board = None
     view_radius = 10  # manhattan distance
 
@@ -66,7 +66,7 @@ class Actor:
 class Patrol(Actor):
     type_id = 0
     type = "patrol"
-    color = 'blue'
+    color = "blue"
 
 
 class Target(Actor):

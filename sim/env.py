@@ -18,25 +18,33 @@ class World:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.board = np.full((self.width, self.height), -1, dtype=int)
         self.actors = []
+        self.initial_positions = []
         self.first_draw = True
 
     def random_position(self):
         return np.random.randint(0, self.width), np.random.randint(0, self.height)
 
     def add_actor(self, actor, position=None):
-        if position is None:
-            position = self.random_position()
-        actor.set_position(position)
+        self.initial_positions.append(position)
         actor.set_size_board(self.width, self.height)
-        self.board[position[0], position[1]] = actor.type_id
         self.actors.append(actor)
+
+    def reset(self):
+        self.current_iter = 0
+        positions = []
+        for k, actor in enumerate(self.actors):
+            position = self.initial_positions[k]
+            position = self.random_position() if position is None else position
+            positions.append(position)
+            actor.set_position(position)
+        return positions
 
     def step(self):
         self.current_iter += 1
         terminal_state = False if self.max_iterations is None else self.current_iter >= self.max_iterations
         actions = []
+        positions = []
         for actor in self.actors:
             obs = []
             nb_patrol_around_target = 0
@@ -54,7 +62,8 @@ class World:
                 # We select a position at random and not the one selected
                 action = choice(possible_directions(actor.limit_board, actor.position))
             actor.set_position(action)
-        return actions, terminal_state
+            positions.append(actor.position)
+        return positions, actions, terminal_state
 
     def draw_board(self):
         plt.ylim(bottom=0, top=self.height)
@@ -65,4 +74,3 @@ class World:
             circle = plt.Circle((x, y), radius=self.actor_radius, color=actor.color)
             plt.gcf().gca().add_artist(circle)
         plt.show()
-

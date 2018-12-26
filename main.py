@@ -10,9 +10,10 @@ for patrol in patrols:
     env.add_actor(patrol)
 env.add_actor(target)
 
+states = env.reset()
 env.draw_board()
 terminal = False
 while not terminal:
-    action_actors, terminal = env.step()
+    states, actions, terminal = env.step()
     env.draw_board()
 
