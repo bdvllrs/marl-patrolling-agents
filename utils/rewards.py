@@ -41,11 +41,20 @@ def full_reward(agents):
     Returns: list of rewards for every agent
     """
     rewards = []
+    num_officer, num_target = 0, 0
+    for agent in agents:
+        if agent.type == 'officer':
+            num_officer += 1
+        else:
+            num_target += 1
     for agent in agents:
         distances = distance_enemies_around(agent, agents)
         if agent.type == "target":
-            reward = sum(distances) - len(distances) * agent.view_radius
+            reward = (num_officer * agent.view_radius - sum(distances)) / (num_officer * agent.view_radius)
         else:
-            reward = - sum(distances)
+            if len(distances) == 0:
+                reward = 0
+            else:
+                reward = (len(distances) * agent.view_radius - sum(distances)) / (len(distances) * agent.view_radius)
         rewards.append(reward)
     return rewards

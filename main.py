@@ -10,10 +10,11 @@ for patrol in patrols:
     env.add_agent(patrol)
 env.add_agent(target)
 
-states = env.reset()
-env.draw_board()
-terminal = False
-while not terminal:
-    states, actions, rewards, terminal = env.step()
+for tries in range(100):
+    states = env.reset()
     env.draw_board()
+    terminal = False
+    while not terminal:
+        states, actions, rewards, terminal = env.step()
+        env.draw_board()
 

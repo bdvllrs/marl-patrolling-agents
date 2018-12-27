@@ -10,10 +10,10 @@ class Agent:
     type = None
     position = None
     last_reward = None
+    last_action = None
     color = "red"
     limit_board = None
     view_radius = 10  # manhattan distance
-    number_arms = 6  # top, left, right, bottom, top-left, top-right, bottom-left, bottom-right
 
     histories = []
 
@@ -23,6 +23,8 @@ class Agent:
         if name is None:
             name = self.type + " " + str(np.random.randint(0, 1000))
         self.name = name
+        self.id_to_action = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'bottom-left', 'top-right', 'bottom-right']
+        self.action_to_id = {a: i for i, a in enumerate(self.id_to_action)}
 
     def reset(self):
         self.histories.append([])  # New history
@@ -31,8 +33,9 @@ class Agent:
         self.histories[-1].append({"position": position})  # Keep history of all positions
         self.position = position
 
-    # def add_action_to_history(self, action):
-    #     self.histories[-1]
+    def add_action_to_history(self, action):
+        self.histories[-1][-1]['action'] = action
+        self.last_action = action
 
     def set_reward(self, reward):
         """
@@ -100,12 +103,19 @@ class Officer(Agent):
         super(Officer, self).__init__(name)
 
         # For thompson sampling
-        self.S = np.zeros(self.number_arms, dtype=float)
-        self.F = np.zeros(self.number_arms, dtype=float)
+        self.S = np.zeros(len(self.id_to_action), dtype=float)
+        self.F = np.zeros(len(self.id_to_action), dtype=float)
 
     def set_reward(self, reward):
-        super(Officer, self).set_reward(reward)
-
+        """
+        Generalized Thompson Sampling. Inspired by Agrawal and Goyal, 2012.
+        https://arxiv.org/pdf/1111.1797.pdf
+        """
+        bernoulli_trial = float(np.random.rand() < reward)  # Generalized version
+        last_action = self.histories[-1][-1]['action']
+        self.S[self.action_to_id[last_action]] += bernoulli_trial
+        self.F[self.action_to_id[last_action]] += 1 - bernoulli_trial
+        super(Officer, self).set_reward(bernoulli_trial)
 
     def draw_action(self, obs):
         """
@@ -114,14 +124,8 @@ class Officer(Agent):
             obs: information on where are the other agents. List of agents.
         """
         theta = np.random.beta(self.S + 1, self.F + 1)
-        # draw = np.argmax(theta)
-        # reward = float(MAB[draws[k]].sample())
-        # # rewards[k] = reward
-        # bernoulli_trial = float(np.random.rand() < reward)  # Generalized version
-        # rewards[k] = bernoulli_trial
-        # S[draws[k]] += bernoulli_trial
-        # F[draws[k]] += 1 - bernoulli_trial
-        return choice(possible_directions(self.limit_board, self.position))
+        draw = np.argmax(theta).item()
+        return self.id_to_action[draw]
 
 
 class Headquarters(Agent):
@@ -154,7 +158,7 @@ class Target(Agent):
             obs: information on where are the other agents. List of agents.
         """
         if self.distance_to_officers(obs) == np.inf:
-            return self.position
+            return 'none'
         directions = possible_directions(self.limit_board, self.position)
         chosen_direction = max(directions, key=lambda direction: self.distance_to_officers(obs, direction))
         return chosen_direction

@@ -19,7 +19,7 @@ def possible_directions(limit_board, position):
     """
     lim_x, lim_y = limit_board
     x, y = position
-    possible_direction = []
+    possible_direction = ['none']
     if x > 0:
         possible_direction.append('left')
         if y > 0:
@@ -55,8 +55,10 @@ def position_from_direction(current_position, direction):
         return x + 1, y + 1
     elif direction == 'bottom-left':
         return x - 1, y - 1
-    elif direction == 'bottom-right':  # else
+    elif direction == 'bottom-right':
         return x + 1, y - 1
+    else:  # none
+        return x, y
 
 
 def get_distance_between(limit_board, position_1, position_2):
@@ -67,7 +69,9 @@ def get_distance_between(limit_board, position_1, position_2):
         position_1: position 1
         position_2: position 2
     """
-    if position_1 in possible_directions(limit_board, position_2):
+    positions = [position_from_direction(position_2, direction) for direction in
+                 possible_directions(limit_board, position_2)]
+    if position_1 in positions:
         return 1
     x, y = position_1
     x_2, y_2 = position_2

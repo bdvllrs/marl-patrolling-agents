@@ -23,7 +23,7 @@ class World:
             height: height of board
             reward_type (str): (full|sparse). Use default reward functions in utils.rewards. Defaults to full
         """
-        assert(reward_type in ['full', 'sparse'], "Unknown reward type.")
+        assert reward_type in ['full', 'sparse'], "Unknown reward type."
 
         self.width = width
         self.height = height
@@ -80,6 +80,7 @@ class World:
             next_position = position_from_direction(agent.position, action)
             agent.set_position(next_position)
             positions.append(agent.position)
+            agent.add_action_to_history(action)
 
         # Give rewards
         rewards = self.give_rewards()
