@@ -11,10 +11,10 @@ def choice(l):
 
 def possible_directions(limit_board, position):
     """
-    Gives the possible moves allowed for the actor
+    Gives the possible moves allowed for the agent
     Args:
         limit_board: limits of the board
-        position: position of the actor
+        position: position of the agent
     Returns: list of possible positions
     """
     lim_x, lim_y = limit_board

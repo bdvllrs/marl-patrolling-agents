@@ -1,10 +1,11 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from utils import choice, possible_directions, get_distance_between
 
 __all__ = ["Patrol", "Target", "Civilian"]
 
 
-class Actor:
+class Agent:
     type_id = None
     type = None
     position = None
@@ -16,7 +17,7 @@ class Actor:
 
     def __init__(self, name=None):
         assert (self.type_id is not None and
-                self.type is not None), "This actor does not have any type information."
+                self.type is not None), "This agent does not have any type information."
         if name is None:
             name = self.type + " " + str(np.random.randint(0, 1000))
         self.name = name
@@ -28,7 +29,7 @@ class Actor:
     @property
     def view_area(self):
         """
-        Defines the points in the board the actor can see
+        Defines the points in the board the agent can see
         """
         positions = [self.position]
         self.view_area_from(self.position, self.view_radius, positions)
@@ -36,7 +37,7 @@ class Actor:
 
     def view_area_from(self, position, hops, positions):
         """
-        Defines the points in the board the actor can see from the given position
+        Defines the points in the board the agent can see from the given position
         Args:
             positions: list of seen positions
             position: original position
@@ -54,40 +55,45 @@ class Actor:
     def set_size_board(self, width, height):
         self.limit_board = (width, height)
 
+    def plot(self, radius):
+        x, y = self.position
+        circle = plt.Circle((x, y), radius=radius, color=self.color)
+        plt.gcf().gca().add_artist(circle)
+
     def draw_action(self, obs):
         """
         Select the action to perform
         Args:
-            obs: information on where are the other actors. List of actors.
+            obs: information on where are the other agents. List of agents.
         """
         return choice(possible_directions(self.limit_board, self.position))
 
 
-class Patrol(Actor):
+class Patrol(Agent):
     type_id = 0
     type = "patrol"
     color = "blue"
 
 
-class Target(Actor):
+class Target(Agent):
     type_id = 1
     type = "target"
 
     def distance_to_patrolers(self, obs, position=None):
         position = self.position if position is None else position
         sum_dist = np.inf
-        for actor in obs:
-            if actor.type == 'patrol':
+        for agent in obs:
+            if agent.type == 'patrol':
                 if sum_dist == np.inf:
                     sum_dist = 0
-                sum_dist += get_distance_between(self.limit_board, position, actor.position)
+                sum_dist += get_distance_between(self.limit_board, position, agent.position)
         return sum_dist
 
     def draw_action(self, obs):
         """
         Choose the position as far away from patrol
         Args:
-            obs: information on where are the other actors. List of actors.
+            obs: information on where are the other agents. List of agents.
         """
         if self.distance_to_patrolers(obs) == np.inf:
             return self.position
@@ -96,7 +102,7 @@ class Target(Actor):
         return position
 
 
-class Civilian(Actor):
+class Civilian(Agent):
     type_id = 2
     type = "civilian"
     color = "black"

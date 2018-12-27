@@ -7,8 +7,8 @@ env = sim.World(width=100, height=100)
 env.max_iterations = 10
 
 for patrol in patrols:
-    env.add_actor(patrol)
-env.add_actor(target)
+    env.add_agent(patrol)
+env.add_agent(target)
 
 states = env.reset()
 env.draw_board()
