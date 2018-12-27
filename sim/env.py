@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import choice, possible_directions, get_distance_between
-from utils.rewards import sparse_reward
+from utils import choice, possible_directions, distance_enemies_around
+from utils.rewards import sparse_reward, full_reward
 
 __all__ = ["World"]
 
@@ -16,21 +16,21 @@ class World:
     max_iterations = None
     current_iter = 0
 
-    def __init__(self, width, height, reward_function=None):
+    def __init__(self, width, height, reward_type='full'):
         """
         Args:
             width: width of the board
             height: height of board
-            reward_function: reward function. Default sparse reward as defined by utils.rewards.sparse_reward.
-                The reward function must take a list of agents as input and return a list of reward (one for every
-                agent)
+            reward_type (str): (full|sparse). Use default reward functions in utils.rewards. Defaults to full
         """
+        assert(reward_type in ['full', 'sparse'], "Unknown reward type.")
+
         self.width = width
         self.height = height
         self.agents = []
         self.initial_positions = []
         self.first_draw = True
-        self.reward_function = reward_function if not None else sparse_reward
+        self.reward_function = sparse_reward if reward_type == 'sparse' else full_reward
 
     def random_position(self):
         return np.random.randint(0, self.width), np.random.randint(0, self.height)
@@ -68,15 +68,11 @@ class World:
         positions = []
         for agent in self.agents:
             obs = []
-            nb_patrol_around_target = 0
             for other_agent in self.agents:
                 if agent.type == 'target' and other_agent.type == 'officer':
-                    if other_agent.position in agent.view_area:
-                        obs.append(other_agent)
-                    if get_distance_between(agent.limit_board, agent.position, other_agent.position) == 1:
-                        nb_patrol_around_target += 1
-            if nb_patrol_around_target >= 2:
-                terminal_state = True
+                    num_officers_around = len(distance_enemies_around(agent, self.agents, max_distance=1))
+                    if num_officers_around >= 2:
+                        terminal_state = True
             action = agent.draw_action(obs)
             actions.append(action)
             if np.random.rand() < self.noise:

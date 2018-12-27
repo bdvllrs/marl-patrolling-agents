@@ -1,4 +1,4 @@
-from utils import get_distance_between, distance_enemies_around
+from utils import distance_enemies_around
 
 
 def sparse_reward(agents):
