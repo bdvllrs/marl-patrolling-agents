@@ -1,4 +1,4 @@
-from utils import get_distance_between
+from utils import get_distance_between, distance_enemies_around
 
 
 def sparse_reward(agents):
@@ -14,13 +14,9 @@ def sparse_reward(agents):
     officer_won = False
     # Check who won
     for agent in agents:
-        if agent.type == 'target':
-            num_officier_around = 0
-            for other_agent in agents:
-                if (agent.type == 'officer' and
-                        get_distance_between(agent.limit_board, agent.position, other_agent.position) == 1):
-                    num_officier_around += 1
-            if num_officier_around >= 2:
+        if agent.type == "target":
+            num_officers_around = len(distance_enemies_around(agent, agents, max_distance=1))
+            if num_officers_around >= 2:
                 officer_won = True
     # Define reward for all agents
     for agent in agents:
@@ -34,4 +30,22 @@ def sparse_reward(agents):
                 rewards.append(0)
             else:
                 rewards.append(1)
+    return rewards
+
+
+def full_reward(agents):
+    """
+    Gives a reward at each step:
+    Args:
+        agents:
+    Returns: list of rewards for every agent
+    """
+    rewards = []
+    for agent in agents:
+        distances = distance_enemies_around(agent, agents)
+        if agent.type == "target":
+            reward = sum(distances) - len(distances) * agent.view_radius
+        else:
+            reward = - sum(distances)
+        rewards.append(reward)
     return rewards

@@ -72,3 +72,23 @@ def get_distance_between(limit_board, position_1, position_2):
         else:
             x_new, y_new = x-1, y-1
     return 1 + get_distance_between(limit_board, (x_new, y_new), position_2)
+
+
+def distance_enemies_around(agent, agents, max_distance=None):
+    """
+    Returns the distance to all enemies around one agent
+    Args:
+        agent: reference agent
+        agents: other agents
+        max_distance: max distance. Default agent's field of view
+    Returns: distances
+    """
+    max_distance = agent.view_radius if max_distance is None else max_distance
+    enemies_around = []
+    for other_agent in agents:
+        if ((agent.type == "target" and other_agent.type == 'officer') or
+                (agent.type == "officer" and other_agent.type == 'target')):
+            dist_agents = get_distance_between(agent.limit_board, agent.position, other_agent.position)
+            if dist_agents <= max_distance:
+                enemies_around.append(dist_agents)
+    return enemies_around
