@@ -13,7 +13,7 @@ class Agent:
     limit_board = None
     view_radius = 10  # manhattan distance
 
-    history = []
+    histories = []
 
     def __init__(self, name=None):
         assert (self.type_id is not None and
@@ -22,8 +22,11 @@ class Agent:
             name = self.type + " " + str(np.random.randint(0, 1000))
         self.name = name
 
+    def reset(self):
+        self.histories.append([])  # New history
+
     def set_position(self, position):
-        self.history.append(position)
+        self.histories[-1].append(position)  # Keep history of all positions
         self.position = position
 
     @property
@@ -77,10 +80,18 @@ class Officer(Agent):
     type = "patrol"
     color = "blue"
 
+    def draw_action(self, obs):
+        """
+        Select the action to perform
+        Args:
+            obs: information on where are the other agents. List of agents.
+        """
+        return choice(possible_directions(self.limit_board, self.position))
+
 
 class Headquarters(Agent):
     """
-    MARL - represents several Officer
+    MARL - represents several Officers
     """
     type_id = 2
     type = "hq"

@@ -34,6 +34,8 @@ class World:
         self.current_iter = 0
         positions = []
         for k, agent in enumerate(self.agents):
+            agent.reset()  # resets agents
+            # Resets original positions (either fixed or random)
             position = self.initial_positions[k]
             position = self.random_position() if position is None else position
             positions.append(position)
