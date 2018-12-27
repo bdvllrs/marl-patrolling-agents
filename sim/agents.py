@@ -12,6 +12,7 @@ class Agent:
     color = "red"
     limit_board = None
     view_radius = 10  # manhattan distance
+    number_arms = 6  # top, left, right, bottom, top-left, top-right, bottom-left, bottom-right
 
     histories = []
 
@@ -28,6 +29,14 @@ class Agent:
     def set_position(self, position):
         self.histories[-1].append(position)  # Keep history of all positions
         self.position = position
+
+    def get_reward(self, reward):
+        """
+        Get reward for last action
+        Args:
+            reward:
+        """
+        pass
 
     @property
     def view_area(self):
@@ -77,7 +86,7 @@ class Officer(Agent):
     No MARL for this one. Each of them learns individually
     """
     type_id = 0
-    type = "patrol"
+    type = "officer"
     color = "blue"
 
     def draw_action(self, obs):

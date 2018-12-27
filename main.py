@@ -14,6 +14,6 @@ states = env.reset()
 env.draw_board()
 terminal = False
 while not terminal:
-    states, actions, terminal = env.step()
+    states, actions, rewards, terminal = env.step()
     env.draw_board()
 
