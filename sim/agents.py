@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils import choice, possible_directions, get_distance_between
 
-__all__ = ["Patrol", "Target", "Civilian"]
+__all__ = ["Officer", "Target", "Headquarters"]
 
 
 class Agent:
@@ -69,10 +69,22 @@ class Agent:
         return choice(possible_directions(self.limit_board, self.position))
 
 
-class Patrol(Agent):
+class Officer(Agent):
+    """
+    No MARL for this one. Each of them learns individually
+    """
     type_id = 0
     type = "patrol"
     color = "blue"
+
+
+class Headquarters(Agent):
+    """
+    MARL - represents several Officer
+    """
+    type_id = 2
+    type = "hq"
+    color = "black"
 
 
 class Target(Agent):
@@ -101,8 +113,3 @@ class Target(Agent):
         position = max(directions, key=lambda pos: self.distance_to_patrolers(obs, pos))
         return position
 
-
-class Civilian(Agent):
-    type_id = 2
-    type = "civilian"
-    color = "black"

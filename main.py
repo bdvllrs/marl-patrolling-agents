@@ -1,6 +1,6 @@
 import sim
 
-patrols = [sim.Patrol("Patrol " + str(k)) for k in range(3)]
+patrols = [sim.Officer("Officer " + str(k)) for k in range(3)]
 target = sim.Target()
 
 env = sim.World(width=100, height=100)
