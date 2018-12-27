@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import choice, possible_directions, distance_enemies_around
+from utils import choice, possible_directions, distance_enemies_around, position_from_direction
 from utils.rewards import sparse_reward, full_reward
 
 __all__ = ["World"]
@@ -77,7 +77,8 @@ class World:
             if np.random.rand() < self.noise:
                 # We select a position at random and not the one selected
                 action = choice(possible_directions(agent.limit_board, agent.position))
-            agent.set_position(action)
+            next_position = position_from_direction(agent.position, action)
+            agent.set_position(next_position)
             positions.append(agent.position)
 
         # Give rewards

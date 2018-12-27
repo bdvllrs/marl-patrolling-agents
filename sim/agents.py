@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import choice, possible_directions, get_distance_between
+from utils import choice, possible_directions, position_from_direction, get_distance_between
 
 __all__ = ["Officer", "Target", "Headquarters"]
 
@@ -31,6 +31,9 @@ class Agent:
         self.histories[-1].append({"position": position})  # Keep history of all positions
         self.position = position
 
+    # def add_action_to_history(self, action):
+    #     self.histories[-1]
+
     def set_reward(self, reward):
         """
         Sets reward for last action.
@@ -60,8 +63,9 @@ class Agent:
         """
         if hops == 0:
             return
-        possible_positions = possible_directions(self.limit_board, position)
-        for new_position in possible_positions:
+        directions = possible_directions(self.limit_board, position)
+        for direction in directions:
+            new_position = position_from_direction(self.position, direction)
             if new_position not in positions:
                 positions.append(new_position)
                 self.view_area_from(new_position, hops - 1, positions)
@@ -92,12 +96,31 @@ class Officer(Agent):
     type = "officer"
     color = "blue"
 
+    def __init__(self, name=None):
+        super(Officer, self).__init__(name)
+
+        # For thompson sampling
+        self.S = np.zeros(self.number_arms, dtype=float)
+        self.F = np.zeros(self.number_arms, dtype=float)
+
+    def set_reward(self, reward):
+        super(Officer, self).set_reward(reward)
+
+
     def draw_action(self, obs):
         """
         Select the action to perform
         Args:
             obs: information on where are the other agents. List of agents.
         """
+        theta = np.random.beta(self.S + 1, self.F + 1)
+        # draw = np.argmax(theta)
+        # reward = float(MAB[draws[k]].sample())
+        # # rewards[k] = reward
+        # bernoulli_trial = float(np.random.rand() < reward)  # Generalized version
+        # rewards[k] = bernoulli_trial
+        # S[draws[k]] += bernoulli_trial
+        # F[draws[k]] += 1 - bernoulli_trial
         return choice(possible_directions(self.limit_board, self.position))
 
 
@@ -114,8 +137,8 @@ class Target(Agent):
     type_id = 1
     type = "target"
 
-    def distance_to_patrolers(self, obs, position=None):
-        position = self.position if position is None else position
+    def distance_to_officers(self, obs, direction=None):
+        position = self.position if direction is None else position_from_direction(self.position, direction)
         sum_dist = np.inf
         for agent in obs:
             if agent.type == 'patrol':
@@ -130,8 +153,8 @@ class Target(Agent):
         Args:
             obs: information on where are the other agents. List of agents.
         """
-        if self.distance_to_patrolers(obs) == np.inf:
+        if self.distance_to_officers(obs) == np.inf:
             return self.position
         directions = possible_directions(self.limit_board, self.position)
-        position = max(directions, key=lambda pos: self.distance_to_patrolers(obs, pos))
-        return position
+        chosen_direction = max(directions, key=lambda direction: self.distance_to_officers(obs, direction))
+        return chosen_direction

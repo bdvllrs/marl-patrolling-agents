@@ -21,22 +21,42 @@ def possible_directions(limit_board, position):
     x, y = position
     possible_direction = []
     if x > 0:
-        possible_direction.append((x - 1, y))
+        possible_direction.append('left')
         if y > 0:
-            possible_direction.append((x - 1, y - 1))
+            possible_direction.append('bottom-left')
         if y < lim_y - 1:
-            possible_direction.append((x - 1, y + 1))
+            possible_direction.append('top-left')
     if y > 0:
-        possible_direction.append((x, y - 1))
+        possible_direction.append('bottom')
     if x < lim_x - 1:
-        possible_direction.append((x + 1, y))
+        possible_direction.append('right')
         if y > 0:
-            possible_direction.append((x + 1, y - 1))
+            possible_direction.append('bottom-right')
         if y < lim_y - 1:
-            possible_direction.append((x + 1, y + 1))
+            possible_direction.append('top-right')
     if y < lim_y - 1:
-        possible_direction.append((x, y + 1))
+        possible_direction.append('top')
     return possible_direction
+
+
+def position_from_direction(current_position, direction):
+    x, y = current_position
+    if direction == 'top':
+        return x, y + 1
+    elif direction == 'bottom':
+        return x, y - 1
+    elif direction == 'left':
+        return x - 1, y
+    elif direction == 'right':
+        return x + 1, y
+    elif direction == 'top-left':
+        return x - 1, y + 1
+    elif direction == 'top-right':
+        return x + 1, y + 1
+    elif direction == 'bottom-left':
+        return x - 1, y - 1
+    elif direction == 'bottom-right':  # else
+        return x + 1, y - 1
 
 
 def get_distance_between(limit_board, position_1, position_2):
@@ -54,23 +74,23 @@ def get_distance_between(limit_board, position_1, position_2):
     x_new, y_new = position_1
     if x < x_2:
         if y < y_2:
-            x_new, y_new = x+1, y+1
+            x_new, y_new = x + 1, y + 1
         elif y == y_2:
-            x_new = x+1
+            x_new = x + 1
         else:
-            x_new, y_new = x+1, y-1
+            x_new, y_new = x + 1, y - 1
     elif x == x_2:
         if y < y_2:
-            y_new = y+1
+            y_new = y + 1
         elif y > y_2:
-            y_new = y-1
+            y_new = y - 1
     else:
         if y < y_2:
-            x_new, y_new = x-1, y+1
+            x_new, y_new = x - 1, y + 1
         elif y == y_2:
-            x_new = x-1
+            x_new = x - 1
         else:
-            x_new, y_new = x-1, y-1
+            x_new, y_new = x - 1, y - 1
     return 1 + get_distance_between(limit_board, (x_new, y_new), position_2)
 
 
