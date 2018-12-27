@@ -29,7 +29,6 @@ class World:
         self.height = height
         self.agents = []
         self.initial_positions = []
-        self.first_draw = True
         self.reward_function = sparse_reward if reward_type == 'sparse' else full_reward
 
     def random_position(self):
@@ -58,7 +57,7 @@ class World:
         """
         rewards = self.reward_function(self.agents)
         for k, reward in enumerate(rewards):
-            self.agents[k].get_reward(reward)
+            self.agents[k].set_reward(reward)
         return rewards
 
     def step(self):

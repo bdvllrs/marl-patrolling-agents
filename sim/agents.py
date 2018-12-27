@@ -9,6 +9,7 @@ class Agent:
     type_id = None
     type = None
     position = None
+    last_reward = None
     color = "red"
     limit_board = None
     view_radius = 10  # manhattan distance
@@ -27,16 +28,18 @@ class Agent:
         self.histories.append([])  # New history
 
     def set_position(self, position):
-        self.histories[-1].append(position)  # Keep history of all positions
+        self.histories[-1].append({"position": position})  # Keep history of all positions
         self.position = position
 
-    def get_reward(self, reward):
+    def set_reward(self, reward):
         """
-        Get reward for last action
+        Sets reward for last action.
+        Has to be called after a set_position
         Args:
             reward:
         """
-        pass
+        self.histories[-1][-1]["reward"] = reward
+        self.last_reward = reward
 
     @property
     def view_area(self):
@@ -132,4 +135,3 @@ class Target(Agent):
         directions = possible_directions(self.limit_board, self.position)
         position = max(directions, key=lambda pos: self.distance_to_patrolers(obs, pos))
         return position
-
