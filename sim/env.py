@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 from utils import choice, possible_directions, distance_enemies_around, position_from_direction
 from utils.rewards import sparse_reward, full_reward
 
-__all__ = ["World"]
+__all__ = ["Env"]
 
 
-class World:
+class Env:
     """
     Environment. An agent takes 1 pixel il the board
     """

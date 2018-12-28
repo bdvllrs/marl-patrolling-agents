@@ -3,7 +3,7 @@ import sim
 patrols = [sim.Officer("Officer " + str(k)) for k in range(3)]
 target = sim.Target()
 
-env = sim.World(width=100, height=100)
+env = sim.Env(width=100, height=100)
 env.max_iterations = 10
 
 for patrol in patrols:
