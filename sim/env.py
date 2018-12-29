@@ -13,7 +13,7 @@ class Env:
 
     agent_radius = 1
     noise = 0.2
-    max_iterations = None
+    max_length_episode = None
     current_iter = 0
 
     def __init__(self, width, height, reward_type='full'):
@@ -62,7 +62,7 @@ class Env:
 
     def step(self):
         self.current_iter += 1
-        terminal_state = False if self.max_iterations is None else self.current_iter >= self.max_iterations
+        terminal_state = False if self.max_length_episode is None else self.current_iter >= self.max_length_episode
         actions = []
         positions = []
         for agent in self.agents:

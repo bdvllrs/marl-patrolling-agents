@@ -1,23 +1,35 @@
 import sim
 from utils import sample_batch_history
-import matplotlib.pyplot as plt
 
-patrols = [sim.Officer("Officer " + str(k)) for k in range(3)]
-target = sim.Target()
 
+number_officers = 5
 env = sim.Env(width=100, height=100)
-env.max_iterations = 5
+n_episodes = 10000
+batch_size = 64
+plot_episode_every = 1000
+env.max_length_episode = 200  # time to go across the board and do a pursuit
 
-for patrol in patrols:
-    env.add_agent(patrol)
+officers = [sim.Officer("Officer " + str(k)) for k in range(number_officers)]
+target = sim.Target()  # One target
+
+for officer in officers:
+    env.add_agent(officer)
 env.add_agent(target)
 
-for tries in range(3):
+for episode in range(n_episodes):
     states = env.reset()
-    env.draw_board()
+    # Draw the board
+    if episode % plot_episode_every:
+        env.draw_board()
     terminal = False
+    # Do an episode
     while not terminal:
         states, actions, rewards, terminal = env.step()
-        env.draw_board()
+        if episode % plot_episode_every:
+            env.draw_board()
 
-batch = sample_batch_history(patrols[0], 5)
+    # Learning step
+    for agent in env.agents:
+        if agent.can_learn:
+            batch = sample_batch_history(agent, batch_size)
+            # Do some teaching

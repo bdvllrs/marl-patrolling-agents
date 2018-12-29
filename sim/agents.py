@@ -15,6 +15,7 @@ class Agent:
     limit_board = None
     view_radius = 3  # manhattan distance
     max_size_history = 20000
+    can_learn = False
 
     def __init__(self, name=None):
         assert (self.type_id is not None and
