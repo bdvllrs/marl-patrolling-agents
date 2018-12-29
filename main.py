@@ -3,7 +3,8 @@ from utils import sample_batch_history
 
 
 number_officers = 5
-env = sim.Env(width=100, height=100)
+reward_type = "full"
+env = sim.Env(width=100, height=100, reward_type=reward_type)
 n_episodes = 10000
 batch_size = 64
 plot_episode_every = 1000
