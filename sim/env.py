@@ -68,6 +68,8 @@ class Env:
         for agent in self.agents:
             obs = []
             for other_agent in self.agents:
+                if other_agent.position in agent.view_area:
+                    obs.append(other_agent)
                 if agent.type == 'target' and other_agent.type == 'officer':
                     num_officers_around = len(distance_enemies_around(agent, self.agents, max_distance=1))
                     if num_officers_around >= 2:
@@ -92,4 +94,4 @@ class Env:
         plt.grid(True)
         for agent in self.agents:
             agent.plot(self.agent_radius)
-        plt.show()
+        # plt.show()

@@ -15,26 +15,29 @@ class Agent:
     limit_board = None
     view_radius = 10  # manhattan distance
 
-    histories = []
-
     def __init__(self, name=None):
         assert (self.type_id is not None and
                 self.type is not None), "This agent does not have any type information."
         if name is None:
             name = self.type + " " + str(np.random.randint(0, 1000))
         self.name = name
-        self.id_to_action = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'bottom-left', 'top-right', 'bottom-right']
+        self.id_to_action = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'bottom-left', 'top-right',
+                             'bottom-right']
         self.action_to_id = {a: i for i, a in enumerate(self.id_to_action)}
+        self.histories = []  # Memory for all the episodes
 
     def reset(self):
-        self.histories.append([])  # New history
+        if len(self.histories) > 0:
+            self.histories[-1]["terminal"] = True  # New history
 
     def set_position(self, position):
-        self.histories[-1].append({"position": position})  # Keep history of all positions
+        self.histories.append({"position": position, "terminal": False})  # Keep history of all positions
         self.position = position
+        if len(self.histories) > 1 and not self.histories[-2]["terminal"]:
+            self.histories[-1]["prev_position"] = self.histories[-2]["position"]
 
     def add_action_to_history(self, action):
-        self.histories[-1][-1]['action'] = action
+        self.histories[-1]['action'] = action
         self.last_action = action
 
     def set_reward(self, reward):
@@ -44,7 +47,7 @@ class Agent:
         Args:
             reward:
         """
-        self.histories[-1][-1]["reward"] = reward
+        self.histories[-1]["reward"] = reward
         self.last_reward = reward
 
     @property
@@ -112,7 +115,7 @@ class Officer(Agent):
         https://arxiv.org/pdf/1111.1797.pdf
         """
         bernoulli_trial = float(np.random.rand() < reward)  # Generalized version
-        last_action = self.histories[-1][-1]['action']
+        last_action = self.histories[-1]['action']
         self.S[self.action_to_id[last_action]] += bernoulli_trial
         self.F[self.action_to_id[last_action]] += 1 - bernoulli_trial
         super(Officer, self).set_reward(bernoulli_trial)
@@ -145,7 +148,7 @@ class Target(Agent):
         position = self.position if direction is None else position_from_direction(self.position, direction)
         sum_dist = np.inf
         for agent in obs:
-            if agent.type == 'patrol':
+            if agent.type == 'officer':
                 if sum_dist == np.inf:
                     sum_dist = 0
                 sum_dist += get_distance_between(self.limit_board, position, agent.position)

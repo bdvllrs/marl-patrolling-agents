@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 
 def choice(l):
@@ -40,6 +41,15 @@ def possible_directions(limit_board, position):
 
 
 def position_from_direction(current_position, direction):
+    """
+    Gives position on the board from a direction
+    Args:
+        current_position: Position of the agent (x_cur, y_cur)
+        direction: one of the 8 possible directions (none, top, left, ...)
+    Returns: couple of position (x_new, y_new)
+    """
+    assert direction in ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
+                         'bottom-left'], "The direction is unknown."
     x, y = current_position
     if direction == 'top':
         return x, y + 1
@@ -116,3 +126,56 @@ def distance_enemies_around(agent, agents, max_distance=None):
             if dist_agents <= max_distance:
                 enemies_around.append(dist_agents)
     return enemies_around
+
+
+def state_from_observation(agent, observation):
+    """
+    Get state board from observation.
+    It is a board of the field of view of the agent where:
+    - -1 is out of board
+    - 0.5 is friend
+    - 1 is enemy
+    Args:
+        agent: Agent receiving the observation
+        observation:
+    Returns: array of shape (2 * agent.view_radius + 1, 2 * agent.view_radius + 1)
+    """
+    side_length = 2 * agent.view_radius + 1
+    board = [[-1 for i in range(side_length)] for j in range(side_length)]
+    view_area = agent.view_area
+    x_a, y_a = agent.position
+    for (x, y) in view_area:
+        i, j = int(x - x_a + agent.view_radius), int(y - y_a + agent.view_radius)
+        board[i][j] = 0
+    for obs in observation:
+        x, y = obs.position
+        i, j = int(x - x_a + agent.view_radius), int(y - y_a + agent.view_radius)
+        if obs.type == agent.type:
+            board[i][j] = 0.5
+        else:
+            board[i][j] = 1
+    return np.array(board)
+
+
+def sample_batch_history(agent, batch_size, memory=10000):
+    """
+    Samples the history of the given agent.
+    Args:
+        agent: agent to sample
+        batch_size:
+        memory: how far we can go back (max) in the history
+    Returns: None or dictionary of keys "states", "next_states", "actions" and "rewards" and values a list of the values in
+        the history. *states* corresponds to prev_position, *next_states* to position, *actions* to action and
+        *rewards* to reward. position is set to None if it is the last position (terminal).
+        Returns None if there are not enough elements in the history to fill a full batch.
+    """
+    history = list(filter(lambda x: "action" in x.keys(), agent.histories))[-memory:]
+    if len(history) >= batch_size:
+        batch = random.sample(history, batch_size)
+        return {
+            "states": list(map(lambda x: x["prev_position"], batch)),
+            "next_states": list(map(lambda x: x["position"] if not x["terminal"] else None, batch)),
+            "actions": list(map(lambda x: x["action"], batch)),
+            "rewards": list(map(lambda x: x["reward"], batch)),
+        }
+    return None
