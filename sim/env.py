@@ -8,7 +8,7 @@ __all__ = ["Env"]
 
 class Env:
     """
-    Environment. An agent takes 1 pixel il the board
+    Environment. An agent takes 1 pixel in the board
     """
 
     agent_radius = 1

@@ -36,6 +36,9 @@ def sparse_reward(agents):
 def full_reward(agents):
     """
     Gives a reward at each step:
+    The reward depends on the distance of the agent to its "enemy".
+    If an officer is close to the target, it wins some reward.
+    If the target cannot see any officer, it wins some reward.
     Args:
         agents:
     Returns: list of rewards for every agent

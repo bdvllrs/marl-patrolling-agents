@@ -54,6 +54,10 @@ function. It returns a dictionary of keys:
 - `actions`: batch of actions (as a 9-dim one-hot vector)
 - `rewards`: batch of obtained reward
 
+## Target agent
+The target agent is not learning anything: it chooses the direction that moves him the furthest away from the officer.
+Otherwise, the target does not move.
+
 ## Life-cycle of the Environment - Agent interactions
 ### Environment
 The main environment is the `sim.Env` class.
