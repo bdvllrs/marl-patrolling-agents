@@ -32,4 +32,4 @@ for episode in range(n_episodes):
     for agent in env.agents:
         if agent.can_learn:
             batch = sample_batch_history(agent, batch_size)
-            # Do some teaching
+            # TODO: do some learning on the agent (access agent.policy_net and agent.target_net)

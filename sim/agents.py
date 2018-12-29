@@ -107,7 +107,20 @@ class Agent:
         return choice(possible_directions(self.limit_board, self.position))
 
 
-class Officer(Agent):
+class RLAgent(Agent):
+    can_learn = True
+
+    def __init__(self, name, gamma=0.9):
+        super(RLAgent, self).__init__(name)
+        self.gamma = gamma
+        # TODO: Add exploration policy (epsilon greedy or other)
+
+        # TODO: Define here policy and target net
+        self.policy_net = None
+        self.target_net = None
+
+
+class Officer(RLAgent):
     """
     No MARL for this one. Each of them learns individually
     """
@@ -115,33 +128,15 @@ class Officer(Agent):
     type = "officer"
     color = "blue"
 
-    def __init__(self, name=None):
-        super(Officer, self).__init__(name)
-
-        # For thompson sampling
-        self.S = np.zeros(len(self.id_to_action), dtype=float)
-        self.F = np.zeros(len(self.id_to_action), dtype=float)
-
-    def set_reward(self, reward):
-        """
-        Generalized Thompson Sampling. Inspired by Agrawal and Goyal, 2012.
-        https://arxiv.org/pdf/1111.1797.pdf
-        """
-        bernoulli_trial = float(np.random.rand() < reward)  # Generalized version
-        last_action = self.histories[-1]['action']
-        self.S[self.action_to_id[last_action]] += bernoulli_trial
-        self.F[self.action_to_id[last_action]] += 1 - bernoulli_trial
-        super(Officer, self).set_reward(bernoulli_trial)
-
     def draw_action(self, obs):
         """
         Select the action to perform
         Args:
             obs: information on where are the other agents. List of agents.
         """
-        theta = np.random.beta(self.S + 1, self.F + 1)
-        draw = np.argmax(theta).item()
-        return self.id_to_action[draw]
+        state = state_from_observation(self, self.position, obs)
+        # TODO: predict the right action with the target net
+        return 'none'
 
 
 class Headquarters(Agent):
