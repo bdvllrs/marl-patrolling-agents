@@ -128,7 +128,7 @@ def distance_enemies_around(agent, agents, max_distance=None):
     return enemies_around
 
 
-def state_from_observation(agent, observation):
+def state_from_observation(agent, position, observation):
     """
     Get state board from observation.
     It is a board of the field of view of the agent where:
@@ -136,6 +136,7 @@ def state_from_observation(agent, observation):
     - 0.5 is friend (as well as itself, which is always in the center)
     - 1 is enemy
     Args:
+        position: position of the agent
         agent: Agent receiving the observation
         observation:
     Returns: array of shape (2 * agent.view_radius + 1, 2 * agent.view_radius + 1)
@@ -143,8 +144,8 @@ def state_from_observation(agent, observation):
     side_length = 2 * agent.view_radius + 1
     # Defaults to zero (not accessible)
     board = [[-1 for i in range(side_length)] for j in range(side_length)]
-    view_area = agent.view_area
-    x_a, y_a = agent.position
+    view_area = agent.view_area(position)
+    x_a, y_a = position
     # Set to zero every position in field of view
     for (x, y) in view_area:
         i, j = int(x - x_a + agent.view_radius), int(y - y_a + agent.view_radius)
@@ -172,15 +173,26 @@ def sample_batch_history(agent, batch_size, memory=10000):
         *rewards* to reward. position is set to None if it is the last position (terminal).
         Returns None if there are not enough elements in the history to fill a full batch.
     """
+    actions_to_onehot = {
+        "none": [1, 0, 0, 0, 0, 0, 0, 0, 0],
+        "top": [0, 1, 0, 0, 0, 0, 0, 0, 0],
+        "bottom": [0, 0, 1, 0, 0, 0, 0, 0, 0],
+        "left": [0, 0, 0, 1, 0, 0, 0, 0, 0],
+        "right": [0, 0, 0, 0, 1, 0, 0, 0, 0],
+        "top-right": [0, 0, 0, 0, 0, 1, 0, 0, 0],
+        "bottom-right": [0, 0, 0, 0, 0, 0, 1, 0, 0],
+        "top-left": [0, 0, 0, 0, 0, 0, 0, 1, 0],
+        "bottom-left": [0, 0, 0, 0, 0, 0, 0, 0, 1],
+    }
     # remove first position and keep only memory elements
-    history = list(filter(lambda x: "action" in x.keys(), agent.histories))[-memory:]
+    history = list(filter(lambda x: "prev_state" in x.keys(), agent.histories))[-memory:]
     if len(history) >= batch_size:
         batch = random.sample(history, batch_size)
         # Transforms into a convenient form
         return {
-            "states": list(map(lambda x: x["prev_position"], batch)),
-            "next_states": list(map(lambda x: x["position"] if not x["terminal"] else None, batch)),
-            "actions": list(map(lambda x: x["action"], batch)),
+            "states": list(map(lambda x: x["prev_state"], batch)),
+            "next_states": list(map(lambda x: x["state"] if not x["terminal"] else None, batch)),
+            "actions": list(map(lambda x: actions_to_onehot[x["action"]], batch)),
             "rewards": list(map(lambda x: x["reward"], batch)),
         }
     return None

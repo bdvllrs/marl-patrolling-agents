@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import choice, possible_directions, position_from_direction, get_distance_between
+from utils import choice, possible_directions, position_from_direction, get_distance_between, state_from_observation
 
 __all__ = ["Officer", "Target", "Headquarters"]
 
@@ -13,7 +13,8 @@ class Agent:
     last_action = None
     color = "red"
     limit_board = None
-    view_radius = 10  # manhattan distance
+    view_radius = 3  # manhattan distance
+    max_size_history = 20000
 
     def __init__(self, name=None):
         assert (self.type_id is not None and
@@ -31,14 +32,19 @@ class Agent:
             self.histories[-1]["terminal"] = True  # New history
 
     def set_position(self, position):
+        if len(self.histories) >= self.max_size_history:
+            self.histories.pop(0)
         self.histories.append({"position": position, "terminal": False})  # Keep history of all positions
         self.position = position
         if len(self.histories) > 1 and not self.histories[-2]["terminal"]:
             self.histories[-1]["prev_position"] = self.histories[-2]["position"]
 
-    def add_action_to_history(self, action):
+    def add_to_history(self, action, obs):
         self.histories[-1]['action'] = action
         self.last_action = action
+        self.histories[-1]['state'] = state_from_observation(self, self.histories[-1]['position'], obs)
+        if len(self.histories) > 2 and "state" in self.histories[-2].keys():
+            self.histories[-1]["prev_state"] = self.histories[-2]["state"]
 
     def set_reward(self, reward):
         """
@@ -50,13 +56,18 @@ class Agent:
         self.histories[-1]["reward"] = reward
         self.last_reward = reward
 
-    @property
-    def view_area(self):
+    def view_area(self, position=None):
         """
         Defines the points in the board the agent can see
         """
-        positions = [self.position]
-        self.view_area_from(self.position, self.view_radius, positions)
+        position = self.position if position is None else position
+        positions = [position]
+        x, y = position
+        for i in range(-self.view_radius, self.view_radius + 1):
+            for j in range(-self.view_radius, self.view_radius + 1):
+                if 0 <= x - i < self.limit_board[0] and 0 <= y - j < self.limit_board[1]:
+                    positions.append((x - i, y - j))
+        # self.view_area_from(position, self.view_radius, positions)
         return positions
 
     def view_area_from(self, position, hops, positions):
@@ -67,11 +78,12 @@ class Agent:
             position: original position
             hops: Number of allowed hops
         """
-        if hops == 0:
+        if hops == -1:
             return
         directions = possible_directions(self.limit_board, position)
+        directions.remove('none')
         for direction in directions:
-            new_position = position_from_direction(self.position, direction)
+            new_position = position_from_direction(position, direction)
             if new_position not in positions:
                 positions.append(new_position)
                 self.view_area_from(new_position, hops - 1, positions)

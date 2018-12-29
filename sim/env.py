@@ -68,7 +68,7 @@ class Env:
         for agent in self.agents:
             obs = []
             for other_agent in self.agents:
-                if other_agent.position in agent.view_area:
+                if other_agent.position in agent.view_area():
                     obs.append(other_agent)
                 if agent.type == 'target' and other_agent.type == 'officer':
                     num_officers_around = len(distance_enemies_around(agent, self.agents, max_distance=1))
@@ -82,7 +82,7 @@ class Env:
             next_position = position_from_direction(agent.position, action)
             agent.set_position(next_position)
             positions.append(agent.position)
-            agent.add_action_to_history(action)
+            agent.add_to_history(action, obs)
 
         # Give rewards
         rewards = self.give_rewards()
