@@ -1,4 +1,5 @@
 import sim
+from model.optimizer import optimize_model
 from utils import sample_batch_history
 
 
@@ -30,7 +31,7 @@ for episode in range(n_episodes):
             env.draw_board()
 
     # Learning step
-    for agent in env.agents:
-        if agent.can_learn:
-            batch = sample_batch_history(agent, batch_size)
-            # TODO: do some learning on the agent (access agent.policy_net and agent.target_net)
+    optimize_model(env, batch_size, episode)
+
+
+

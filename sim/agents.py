@@ -1,8 +1,14 @@
+import random
+import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
 from utils import choice, possible_directions, position_from_direction, get_distance_between, state_from_observation
+from model import DQN
+import torch
 
 __all__ = ["Officer", "Target", "Headquarters"]
+# if gpu is to be used
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class Agent:
@@ -110,14 +116,41 @@ class Agent:
 class RLAgent(Agent):
     can_learn = True
 
-    def __init__(self, name, gamma=0.9):
+    def __init__(self, name, width=100, height=100, gamma=0.9):
         super(RLAgent, self).__init__(name)
         self.gamma = gamma
-        # TODO: Add exploration policy (epsilon greedy or other)
-
+        self.EPS_START = 0.9
+        self.EPS_END = 0.05
+        self.EPS_DECAY = 200
+        self.steps_done = 0
         # TODO: Define here policy and target net
-        self.policy_net = None
-        self.target_net = None
+
+        self.policy_net = DQN(height, width).to(device)
+        self.target_net = DQN(height, width).to(device)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.target_net.eval()
+        self.optimizer = optim.RMSprop(self.policy_net.parameters())
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.target_net.eval()
+
+
+    # Exploration policy (epsilon greedy)
+    def select_action(self, state):
+        sample = random.random()
+        eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
+                                  np.math.exp(-1. * self.steps_done / self.EPS_DECAY)
+        self.steps_done += 1
+
+        state = torch.from_numpy(state).float().to(device)
+
+        if sample > eps_threshold:
+            with torch.no_grad():
+                # t.max(1) will return largest value for column of each row.
+                # second column on max result is index of where max element was
+                # found, so we pick action with the larger expected reward.
+                return self.policy_net(state).max(1)[1].view(1, 1)
+        else:
+            return torch.tensor([[random.randrange(9)]], device=device, dtype=torch.long)
 
 
 class Officer(RLAgent):
@@ -136,7 +169,11 @@ class Officer(RLAgent):
         """
         state = state_from_observation(self, self.position, obs)
         # TODO: predict the right action with the target net
-        return 'none'
+        action = self.select_action(state)
+        actions_possible = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
+         'bottom-left']
+        index = action[0][0].item()
+        return actions_possible[index]
 
 
 class Headquarters(Agent):

@@ -153,7 +153,7 @@ def state_from_observation(agent, position, observation):
     # Set to values the other agents
     for obs in observation:
         x, y = obs.position
-        i, j = int(x - x_a + agent.view_radius), int(y - y_a + agent.view_radius)
+        i, j = int(x - x_a + agent.view_radius)-1, int(y - y_a + agent.view_radius)-1
         if obs.type == agent.type:
             board[i][j] = 0.5
         else:
