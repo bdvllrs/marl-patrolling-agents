@@ -26,10 +26,11 @@ def optimize_model(env, batch_size, episode):
 
             #TODO : critic : error size !
 
-            print(state_batch.shape)   # torch.Size([448, 7]) au lieu de torch.Size([64, 7, 7])
-            print(action_batch.shape)  # torch.Size([576]) au lieu de torch.Size([64, 9])
-            print(agent.policy_net(state_batch.cuda()).shape) # torch.Size([64, 9])
-            state_action_values = agent.policy_net(state_batch.cuda()).gather(1, action_batch.cuda().long())
+            state_batch.resize(batch_size, 7,7)   # torch.Size([448, 7]) au lieu de torch.Size([64, 7, 7])
+            action_batch.resize(batch_size, 9)  # torch.Size([576]) au lieu de torch.Size([64, 9])
+
+
+            state_action_values = agent.policy_net(state_batch.cuda())#.gather(1, action_batch.cuda().long())
 
 
 
@@ -39,12 +40,13 @@ def optimize_model(env, batch_size, episode):
             # This is merged based on the mask, such that we'll have either the expected
             # state value or 0 in case the state was final.
             next_state_values = torch.zeros(batch_size, device=device)
-            next_state_values[non_final_mask] = agent.target_net(non_final_next_states).max(1)[0].detach()
+            next_state_values[non_final_mask] = agent.target_net(non_final_next_states.cuda()).max(1)[0].detach()
             # Compute the expected Q values
-            expected_state_action_values = (next_state_values * agent.gamma) + reward_batch
+            expected_state_action_values = (next_state_values * agent.gamma) + reward_batch.cuda() + 0.5
 
+            final = torch.zeros(64, 9).cuda().scatter_(1, expected_state_action_values.reshape(64,1).long(), 1)
             # Compute Huber loss
-            loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
+            loss = F.smooth_l1_loss(state_action_values, final)
 
             # Optimize the model
             agent.optimizer.zero_grad()
@@ -55,4 +57,3 @@ def optimize_model(env, batch_size, episode):
 
             if episode % 10 == 0:
                 agent.target_net.load_state_dict(agent.policy_net.state_dict())
-
