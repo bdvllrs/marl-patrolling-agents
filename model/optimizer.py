@@ -1,6 +1,7 @@
 from utils import sample_batch_history
 import torch
 import torch.nn.functional as F
+import numpy as np
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -11,29 +12,20 @@ def optimize_model(env, batch_size, episode):
         if agent.can_learn:
             batch = sample_batch_history(agent, batch_size)
             non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                                    torch.FloatTensor(batch["next_states"]))), device=device, dtype=torch.uint8)
-            non_final_next_states = torch.cat([s for s in torch.FloatTensor(batch["next_states"])
-                                                        if s is not None])
-            state_batch = torch.cat([s for s in torch.FloatTensor(batch["states"], device=device)
-                       if s is not None])
-            action_batch = torch.cat([s for s in torch.FloatTensor(batch["actions"], device=device)
-                       if s is not None])
-            reward_batch = torch.FloatTensor(batch["rewards"], device=device)
+                                                    batch["next_states"])), device=device, dtype=torch.uint8)
 
+            non_final_next_states = torch.cat([torch.FloatTensor(s, device=device) for s in batch["next_states"]
+                                               if s is not None])
+
+            state_batch = torch.FloatTensor(batch["states"], device=device)
+            action_batch = torch.FloatTensor(batch["actions"], device=device)
+            reward_batch = torch.FloatTensor(batch["rewards"], device=device)
             # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
             # columns of actions taken. These are the actions which would've been taken
             # for each batch state according to policy_net
-
-            #TODO : critic : error size !
-
-            state_batch.resize(batch_size, 7,7)   # torch.Size([448, 7]) au lieu de torch.Size([64, 7, 7])
-            action_batch.resize(batch_size, 9)  # torch.Size([576]) au lieu de torch.Size([64, 9])
-
-
-            state_action_values = agent.policy_net(state_batch.cuda())#.gather(1, action_batch.cuda().long())
-
-
-
+            state_batch.resize(batch_size, 7,7)
+            action_batch.resize(batch_size, 9)
+            state_action_values = agent.policy_net(state_batch.cuda())
             # Compute V(s_{t+1}) for all next states.
             # Expected values of actions for non_final_next_states are computed based
             # on the "older" target_net; selecting their best reward with max(1)[0].

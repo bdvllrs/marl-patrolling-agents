@@ -10,9 +10,11 @@ n_episodes = 10000
 batch_size = 64
 plot_episode_every = 1000
 env.max_length_episode = 200  # time to go across the board and do a pursuit
+print_every = 100
 
 officers = [sim.Officer("Officer " + str(k)) for k in range(number_officers)]
 target = sim.Target()  # One target
+
 
 for officer in officers:
     env.add_agent(officer)
@@ -32,6 +34,9 @@ for episode in range(n_episodes):
 
     # Learning step
     optimize_model(env, batch_size, episode)
+
+    if episode % print_every == 0:
+        print("Episode Num ", episode)
 
 
 
