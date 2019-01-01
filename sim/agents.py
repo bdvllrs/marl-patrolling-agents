@@ -19,7 +19,7 @@ class Agent:
     last_action = None
     color = "red"
     limit_board = None
-    view_radius = 3  # manhattan distance
+    view_radius = 10  # manhattan distance
     max_size_history = 20000
     can_learn = False
 
@@ -33,6 +33,7 @@ class Agent:
                              'bottom-right']
         self.action_to_id = {a: i for i, a in enumerate(self.id_to_action)}
         self.histories = []  # Memory for all the episodes
+        self.loss_values = []
 
     def reset(self):
         if len(self.histories) > 0:
@@ -125,8 +126,8 @@ class RLAgent(Agent):
         self.steps_done = 0
         # TODO: Define here policy and target net
 
-        self.policy_net = DQN(height, width).to(device)
-        self.target_net = DQN(height, width).to(device)
+        self.policy_net = DQN(height).to(device)
+        self.target_net = DQN(height).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
         self.optimizer = optim.RMSprop(self.policy_net.parameters())
@@ -148,7 +149,7 @@ class RLAgent(Agent):
                 # t.max(1) will return largest value for column of each row.
                 # second column on max result is index of where max element was
                 # found, so we pick action with the larger expected reward.
-                return self.policy_net(state).max(1)[1].view(1, 1)
+                return self.policy_net(state).max(1)[1]#.view(1, 1)
         else:
             return torch.tensor([[random.randrange(9)]], device=device, dtype=torch.long)
 
@@ -160,6 +161,7 @@ class Officer(RLAgent):
     type_id = 0
     type = "officer"
     color = "blue"
+    view_radius = 100
 
     def draw_action(self, obs):
         """

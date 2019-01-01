@@ -1,6 +1,8 @@
 import sim
 from model.optimizer import optimize_model
-from utils import sample_batch_history
+import time
+from utils.utils import draw_result
+
 
 
 number_officers = 5
@@ -11,6 +13,7 @@ batch_size = 64
 plot_episode_every = 1000
 env.max_length_episode = 200  # time to go across the board and do a pursuit
 print_every = 100
+plot_loss = []
 
 officers = [sim.Officer("Officer " + str(k)) for k in range(number_officers)]
 target = sim.Target()  # One target
@@ -19,6 +22,8 @@ target = sim.Target()  # One target
 for officer in officers:
     env.add_agent(officer)
 env.add_agent(target)
+
+start = time.time()
 
 for episode in range(n_episodes):
     states = env.reset()
@@ -37,6 +42,9 @@ for episode in range(n_episodes):
 
     if episode % print_every == 0:
         print("Episode Num ", episode)
+        print("Time : ", time.time()-start)
+        for agent in env.agents:
+            if agent.can_learn:
+                draw_result(agent.loss_values, agent.name)
 
-
-
+                print("Save fig, ", agent.name)

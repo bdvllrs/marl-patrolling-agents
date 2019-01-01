@@ -196,3 +196,18 @@ def sample_batch_history(agent, batch_size, memory=10000):
             "rewards": list(map(lambda x: x["reward"], batch)),
         }
     return None
+
+import numpy as np
+import matplotlib.pyplot as plt
+plt.ion()
+
+def draw_result(lst_loss, title):
+    plt.figure(figsize=[8, 6])
+    plt.plot(lst_loss, '-b', label='loss')
+
+    plt.xlabel("n iteration")
+    plt.legend(loc='upper left')
+    plt.title(title)
+
+    # save image
+    plt.savefig(title+".png")  # should before show method

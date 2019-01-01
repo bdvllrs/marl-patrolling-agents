@@ -94,4 +94,5 @@ class Env:
         plt.grid(True)
         for agent in self.agents:
             agent.plot(self.agent_radius)
-        # plt.show()
+
+        plt.draw()

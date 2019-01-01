@@ -1,7 +1,9 @@
 from utils import sample_batch_history
 import torch
 import torch.nn.functional as F
-import numpy as np
+
+
+
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -23,8 +25,6 @@ def optimize_model(env, batch_size, episode):
             # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
             # columns of actions taken. These are the actions which would've been taken
             # for each batch state according to policy_net
-            state_batch.resize(batch_size, 7,7)
-            action_batch.resize(batch_size, 9)
             state_action_values = agent.policy_net(state_batch.cuda())
             # Compute V(s_{t+1}) for all next states.
             # Expected values of actions for non_final_next_states are computed based
@@ -39,6 +39,7 @@ def optimize_model(env, batch_size, episode):
             final = torch.zeros(64, 9).cuda().scatter_(1, expected_state_action_values.reshape(64,1).long(), 1)
             # Compute Huber loss
             loss = F.smooth_l1_loss(state_action_values, final)
+            agent.loss_values.append(loss.item())
 
             # Optimize the model
             agent.optimizer.zero_grad()
@@ -47,5 +48,5 @@ def optimize_model(env, batch_size, episode):
                 param.grad.data.clamp_(-1, 1)
             agent.optimizer.step()
 
-            if episode % 10 == 0:
+            if episode % 100 == 0:
                 agent.target_net.load_state_dict(agent.policy_net.state_dict())
