@@ -34,6 +34,7 @@ class Agent:
         self.action_to_id = {a: i for i, a in enumerate(self.id_to_action)}
         self.histories = []  # Memory for all the episodes
         self.loss_values = []
+        self.reward_values = []
 
     def reset(self):
         if len(self.histories) > 0:
@@ -142,7 +143,11 @@ class RLAgent(Agent):
                                   np.math.exp(-1. * self.steps_done / self.EPS_DECAY)
         self.steps_done += 1
 
-        state = torch.from_numpy(state).float().to(device)
+
+
+        state = torch.from_numpy(state).float().to(device).unsqueeze(0)
+        h = state.shape[-1]
+        state = state.reshape(1,h*h)
 
         if sample > eps_threshold:
             with torch.no_grad():

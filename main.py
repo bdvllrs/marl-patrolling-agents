@@ -45,6 +45,7 @@ for episode in range(n_episodes):
         print("Time : ", time.time()-start)
         for agent in env.agents:
             if agent.can_learn:
-                draw_result(agent.loss_values, agent.name)
-
+                draw_result(agent.loss_values, "loss " + str(agent.name))
+                draw_result(agent.reward_values, "reward "+ str(agent.name))
                 print("Save fig, ", agent.name)
+                #TODO : plot reward
