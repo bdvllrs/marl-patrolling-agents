@@ -14,6 +14,11 @@ def optimize_model(env, batch_size, episode):
     for agent in env.agents:
         if agent.can_learn:
             batch = sample_batch_history(agent, batch_size)
+
+            if batch is None:
+                # Not enough data in histories
+                return
+
             non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                                     batch["next_states"])), device=device, dtype=torch.uint8)
             h = 100
