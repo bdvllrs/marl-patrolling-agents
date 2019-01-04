@@ -42,6 +42,11 @@ class Env:
         agent.set_size_board(self.width, self.height)
         self.agents.append(agent)
 
+    def set_position(self, agent, position=None):
+        for k, other_agents in enumerate(self.agents):
+            if agent == other_agents:
+                self.initial_positions[k] = position
+
     def reset(self):
         self.current_iter = 0
         positions = []
@@ -58,7 +63,7 @@ class Env:
         """
         Gives reward to all agents
         """
-        rewards = self.reward_function(self.agents)
+        rewards = self.reward_function(self.agents, self.current_iter)
         for k, reward in enumerate(rewards):
             self.agents[k].set_reward(reward)
         return rewards

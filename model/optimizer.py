@@ -2,13 +2,11 @@ from utils import sample_batch_history
 import torch
 import torch.nn.functional as F
 
-
-
-
 # if gpu is to be used
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
+
 
 def optimize_model(env, batch_size, episode):
     for agent in env.agents:
@@ -21,10 +19,9 @@ def optimize_model(env, batch_size, episode):
 
             non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                                     batch["next_states"])), device=device, dtype=torch.uint8)
-            h = 100
+            h = env.height
             BNS = [s for s in batch["next_states"] if s is not None]
             non_final_next_states = torch.FloatTensor(BNS, device=device).reshape(len(BNS), h * h)
-
 
             state_batch = torch.FloatTensor(batch["states"], device=device)
             action_batch = torch.FloatTensor(batch["actions"], device=device).max(1)[1].unsqueeze(1)

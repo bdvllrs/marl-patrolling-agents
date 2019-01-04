@@ -10,6 +10,23 @@ def choice(l):
     return l[item]
 
 
+def random_position_around_point(ref_point, max_distance, limits):
+    """
+    Gives a random position at in a circle around position
+    Args:
+        ref_point: central position
+        max_distance: maximum distance from position
+        limits: limits of the board
+    """
+    possible_positions = []
+    x, y = ref_point
+    for i in range(-max_distance, max_distance + 1):
+        for j in range(-max_distance, max_distance + 1):
+            if 0 <= x + i < limits[0] and 0 <= y + j < limits[1]:
+                possible_positions.append((x + i, y + j))
+    return choice(possible_positions)
+
+
 def possible_directions(limit_board, position):
     """
     Gives the possible moves allowed for the agent
@@ -194,9 +211,12 @@ def sample_batch_history(agent, batch_size, memory=10000):
         }
     return None
 
+
 import numpy as np
 import matplotlib.pyplot as plt
+
 plt.ion()
+
 
 def draw_result(env):
     plt.figure(1)

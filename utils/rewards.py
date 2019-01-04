@@ -1,7 +1,7 @@
 from utils import distance_enemies_around
 
 
-def sparse_reward(agents):
+def sparse_reward(agents, t):
     """
     Gives a sparse reward at the end:
         - 0 for officers if target is alone and 1 for target
@@ -37,7 +37,7 @@ def sparse_reward(agents):
     return rewards
 
 
-def full_reward(agents):
+def full_reward(agents, t):
     """
     Gives a reward at each step:
     The reward depends on the distance of the agent to its "enemy".
@@ -60,11 +60,11 @@ def full_reward(agents):
             num_officers += 1
     for agent in agents:
         if agent.type == "officer" and officer_won:
-            rewards.append(1000)
+            rewards.append(1000/(2**t))
         else:
             new_x, new_y = agent.position
             if new_x >= agent.limit_board[0] or new_y >= agent.limit_board[1] or new_x < 0 or new_y < 0:
-                rewards.append(0)
+                rewards.append(-10000)
             else:
                 distances = distance_enemies_around(agent, agents)
                 if agent.type == "target":
@@ -74,8 +74,9 @@ def full_reward(agents):
                         reward = sum(distances)
                 else:
                     if len(distances) == 0:
-                        reward = -agent.view_radius * num_targets
+                        reward = 0
                     else:
-                        reward = -sum(distances)
+                        reward = agent.view_radius * num_targets - sum(distances)
+                reward /= 2 ** t
                 rewards.append(reward)
     return rewards

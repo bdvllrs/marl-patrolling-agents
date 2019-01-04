@@ -1,7 +1,8 @@
 import sim
 from model.optimizer import optimize_model
 import time
-from utils.utils import draw_result
+import numpy as np
+from utils.utils import draw_result, random_position_around_point
 
 import matplotlib.pyplot as plt
 
@@ -9,20 +10,27 @@ plt.show()
 
 number_officers = 3
 reward_type = "full"
-env = sim.Env(width=100, height=100, reward_type=reward_type)
+width = height = 100
+env = sim.Env(width=width, height=height, reward_type=reward_type)
 n_episodes = 10000
 batch_size = 64
 plot_episode_every = 30
 env.max_length_episode = 100  # time to go across the board and do a pursuit
 print_every = 30
+increase_spawn_circle_every = [1]
+spawn_distance = [100]
+spawn_index = 0
 plot_loss = []
 
 officers = [sim.Officer("Officer " + str(k)) for k in range(number_officers)]
 target = sim.Target()  # One target
 
-for officer in officers:
-    env.add_agent(officer)
+x_target, y_target = np.random.randint(0, width), np.random.randint(0, height)
 env.add_agent(target)
+
+for officer in officers:
+    position = random_position_around_point((x_target, y_target), spawn_distance[spawn_index], (width, height))
+    env.add_agent(officer, position)
 
 start = time.time()
 
@@ -46,3 +54,14 @@ for episode in range(1, n_episodes + 1):
         print("Time : ", time.time() - start)
         draw_result(env)
         print("Save fig")
+
+    # Update positions
+    if not episode % increase_spawn_circle_every[spawn_index] and spawn_index < len(spawn_distance) - 1:
+        print('Increasing spawn distance to', spawn_distance[spawn_index])
+        spawn_index += 1
+
+    x_target, y_target = np.random.randint(0, width), np.random.randint(0, height)
+    env.set_position(target, (x_target, y_target))
+    for officer in officers:
+        position = random_position_around_point((x_target, y_target), spawn_distance[spawn_index], (width, height))
+        env.set_position(officer, position)

@@ -142,24 +142,23 @@ class RLAgent(Agent):
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
-
     # Exploration policy (epsilon greedy)
     def select_action(self, state):
         sample = random.random()
-        eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
-                                  np.math.exp(-1. * self.steps_done / self.EPS_DECAY)
+        eps_threshold = (self.EPS_END + (self.EPS_START - self.EPS_END) *
+                         np.math.exp(-1. * self.steps_done / self.EPS_DECAY))
         self.steps_done += 1
 
         state = torch.from_numpy(state).float().to(device).unsqueeze(0)
         h = state.shape[-1]
-        state = state.reshape(1,h*h)
+        state = state.reshape(1, h * h)
 
         if sample > eps_threshold:
             with torch.no_grad():
                 # t.max(1) will return largest value for column of each row.
                 # second column on max result is index of where max element was
                 # found, so we pick action with the larger expected reward.
-                return self.policy_net(state).max(1)[1]#.view(1, 1)
+                return self.policy_net(state).max(1)[1]  # .view(1, 1)
         else:
             return torch.tensor([random.randrange(9)], device=device, dtype=torch.long)
 
@@ -172,24 +171,22 @@ class Officer(RLAgent):
     type = "officer"
     color = "blue"
 
-
     def draw_action(self, obs):
         """
         Select the action to perform
         Args:
             obs: information on where are the other agents. List of agents.
         """
-        # state = state_from_observation(self, self.position, obs)
+        state = state_from_observation(self, self.position, obs)
         # TODO: predict the right action with the target net
-        # action = self.select_action(state)
+        action = self.select_action(state)
 
-        #print(action)
-        return choice(possible_directions(self.limit_board, self.position))
+        # print(action)
 
-        # actions_possible = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
-        #  'bottom-left']
-        # index = action[0][0].item()
-        # return actions_possible[index]
+        actions_possible = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
+                            'bottom-left']
+        index = action[0][0].item()
+        return actions_possible[index]
 
 
 class Headquarters(Agent):
