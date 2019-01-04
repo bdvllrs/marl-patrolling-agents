@@ -198,13 +198,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.ion()
 
-def draw_result(lst_loss, title):
-    plt.figure(figsize=[8, 6])
-    plt.plot(lst_loss, '-b', label='loss')
+def draw_result(env):
+    plt.figure(1)
+    for agent in env.agents:
+        if agent.can_learn:
+            lst_loss = agent.loss_values
+            lst_reward = agent.reward_values
+            plt.plot(lst_loss, label='Loss ' + str(agent.name))
+            plt.plot(lst_reward, label='Reward ' + str(agent.name))
 
     plt.xlabel("n iteration")
     plt.legend(loc='upper left')
-    plt.title(title)
-
+    plt.title("Lost_Reward")
     # save image
-    plt.savefig(title+".png")  # should before show method
+    plt.savefig("Lost_Reward.png")  # should before show method

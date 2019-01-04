@@ -20,7 +20,7 @@ class Agent:
     color = "red"
     limit_board = None
     view_radius = 10  # manhattan distance
-    max_size_history = 1000
+    max_size_history = 300
     can_learn = False
 
     def __init__(self, name=None):

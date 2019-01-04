@@ -16,7 +16,7 @@ def optimize_model(env, batch_size, episode):
             batch = sample_batch_history(agent, batch_size)
             non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                                     batch["next_states"])), device=device, dtype=torch.uint8)
-            h = len(batch["next_states"][0])
+            h = 100
             BNS = [s for s in batch["next_states"] if s is not None]
             non_final_next_states = torch.FloatTensor(BNS, device=device).reshape(len(BNS), h * h)
 
