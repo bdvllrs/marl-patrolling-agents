@@ -17,8 +17,8 @@ batch_size = 64
 plot_episode_every = 30
 env.max_length_episode = 100  # time to go across the board and do a pursuit
 print_every = 30
-increase_spawn_circle_every = [1]
-spawn_distance = [100]
+increase_spawn_circle_every = [10, 10, 10] + [30] * 3
+spawn_distance = [2, 3, 5, 10, 50, 100]
 spawn_index = 0
 plot_loss = []
 
