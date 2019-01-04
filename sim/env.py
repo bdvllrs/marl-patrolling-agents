@@ -25,6 +25,9 @@ class Env:
         """
         assert reward_type in ['full', 'sparse'], "Unknown reward type."
 
+        plt.ion()
+        plt.show()
+
         self.width = width
         self.height = height
         self.agents = []
@@ -89,6 +92,7 @@ class Env:
         return positions, actions, rewards, terminal_state
 
     def draw_board(self):
+        plt.figure(0)
         plt.ylim(bottom=0, top=self.height)
         plt.xlim(left=0, right=self.width)
         plt.grid(True)
@@ -96,3 +100,4 @@ class Env:
             agent.plot(self.agent_radius)
 
         plt.draw()
+        plt.pause(0.001)
