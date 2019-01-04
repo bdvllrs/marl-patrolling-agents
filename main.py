@@ -3,7 +3,9 @@ from model.optimizer import optimize_model
 import time
 from utils.utils import draw_result
 
+import matplotlib.pyplot as plt
 
+plt.show()
 
 number_officers = 5
 reward_type = "full"
@@ -12,7 +14,7 @@ n_episodes = 10000
 batch_size = 64
 plot_episode_every = 1000
 env.max_length_episode = 200  # time to go across the board and do a pursuit
-print_every = 100
+print_every = 1
 plot_loss = []
 
 officers = [sim.Officer("Officer " + str(k)) for k in range(number_officers)]
@@ -48,4 +50,3 @@ for episode in range(n_episodes):
                 draw_result(agent.loss_values, "loss " + str(agent.name))
                 draw_result(agent.reward_values, "reward "+ str(agent.name))
                 print("Save fig, ", agent.name)
-                #TODO : plot reward

@@ -118,8 +118,9 @@ class Agent:
 class RLAgent(Agent):
     can_learn = True
 
-    def __init__(self, name, width=100, height=100, gamma=0.9):
+    def __init__(self, name, view_radius=100, gamma=0.9):
         super(RLAgent, self).__init__(name)
+        self.view_radius = 100
         self.gamma = gamma
         self.EPS_START = 0.9
         self.EPS_END = 0.05
@@ -127,8 +128,8 @@ class RLAgent(Agent):
         self.steps_done = 0
         # TODO: Define here policy and target net
 
-        self.policy_net = DQN(height).to(device)
-        self.target_net = DQN(height).to(device)
+        self.policy_net = DQN(view_radius).to(device)
+        self.target_net = DQN(view_radius).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
         self.optimizer = optim.RMSprop(self.policy_net.parameters())
@@ -143,8 +144,6 @@ class RLAgent(Agent):
                                   np.math.exp(-1. * self.steps_done / self.EPS_DECAY)
         self.steps_done += 1
 
-
-
         state = torch.from_numpy(state).float().to(device).unsqueeze(0)
         h = state.shape[-1]
         state = state.reshape(1,h*h)
@@ -156,7 +155,7 @@ class RLAgent(Agent):
                 # found, so we pick action with the larger expected reward.
                 return self.policy_net(state).max(1)[1]#.view(1, 1)
         else:
-            return torch.tensor([[random.randrange(9)]], device=device, dtype=torch.long)
+            return torch.tensor([random.randrange(9)], device=device, dtype=torch.long)
 
 
 class Officer(RLAgent):
@@ -166,7 +165,7 @@ class Officer(RLAgent):
     type_id = 0
     type = "officer"
     color = "blue"
-    view_radius = 100
+
 
     def draw_action(self, obs):
         """
@@ -177,6 +176,9 @@ class Officer(RLAgent):
         state = state_from_observation(self, self.position, obs)
         # TODO: predict the right action with the target net
         action = self.select_action(state)
+
+        #print(action)
+
         actions_possible = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
          'bottom-left']
         index = action[0][0].item()
