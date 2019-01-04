@@ -20,16 +20,20 @@ def sparse_reward(agents):
                 officer_won = True
     # Define reward for all agents
     for agent in agents:
-        if agent.type == 'officer':
-            if officer_won:
-                rewards.append(1)
-            else:
-                rewards.append(0)
+        new_x, new_y = agent.position
+        if new_x >= agent.limit_board[0] or new_y >= agent.limit_board[1] or new_x < 0 or new_y < 0:
+            rewards.append(0)
         else:
-            if officer_won:
-                rewards.append(0)
+            if agent.type == 'officer':
+                if officer_won:
+                    rewards.append(1)
+                else:
+                    rewards.append(0)
             else:
-                rewards.append(1)
+                if officer_won:
+                    rewards.append(0)
+                else:
+                    rewards.append(1)
     return rewards
 
 
@@ -51,13 +55,17 @@ def full_reward(agents):
         else:
             num_target += 1
     for agent in agents:
-        distances = distance_enemies_around(agent, agents)
-        if agent.type == "target":
-            reward = (num_officer * agent.view_radius - sum(distances)) / (num_officer * agent.view_radius)
+        new_x, new_y = agent.position
+        if new_x >= agent.limit_board[0] or new_y >= agent.limit_board[1] or new_x < 0 or new_y < 0:
+            rewards.append(0)
         else:
-            if len(distances) == 0:
-                reward = 0
+            distances = distance_enemies_around(agent, agents)
+            if agent.type == "target":
+                reward = (num_officer * agent.view_radius - sum(distances)) / (num_officer * agent.view_radius)
             else:
-                reward = (len(distances) * agent.view_radius - sum(distances)) / (len(distances) * agent.view_radius)
-        rewards.append(reward)
+                if len(distances) == 0:
+                    reward = 0
+                else:
+                    reward = (len(distances) * agent.view_radius - sum(distances)) / (len(distances) * agent.view_radius)
+            rewards.append(reward)
     return rewards

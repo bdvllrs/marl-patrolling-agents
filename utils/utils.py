@@ -145,15 +145,16 @@ def state_from_observation(agent, position, observation):
     # Defaults to zero (not accessible)
     board = [[0 for i in range(side_length[1])] for j in range(side_length[0])]
     x_a, y_a = position
-    board[x_a][y_a] = -1
+    if 0 <= x_a < side_length[0] and 0 <= y_a < side_length[1]:
+        board[x_a][y_a] = -1
     # Set to zero every position in field of view
     for obs in observation:
         x, y = obs.position
-        board[x][y] = 0
-        if obs.type == agent.type:
-            board[x][y] = 0.5
-        else:
-            board[x][y] = 1
+        if 0 <= x < side_length[0] and 0 <= y < side_length[1]:
+            if obs.type == agent.type:
+                board[x][y] = 0.5
+            else:
+                board[x][y] = 1
     return np.array(board)
 
 
