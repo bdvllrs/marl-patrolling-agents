@@ -28,6 +28,7 @@ env.add_agent(target)
 start = time.time()
 
 for episode in range(n_episodes):
+    print('start')
     states = env.reset()
     # Draw the board
     if episode % plot_episode_every:

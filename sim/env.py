@@ -93,6 +93,7 @@ class Env:
 
     def draw_board(self):
         plt.figure(0)
+        plt.clf()
         plt.ylim(bottom=0, top=self.height)
         plt.xlim(left=0, right=self.width)
         plt.grid(True)
