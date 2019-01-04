@@ -132,7 +132,7 @@ def state_from_observation(agent, position, observation):
     """
     Get state board from observation.
     It is a board of the field of view of the agent where:
-    - -1 is out of board
+    - -1 itself
     - 0.5 is friend (as well as itself, which is always in the center)
     - 1 is enemy
     Args:
@@ -141,23 +141,19 @@ def state_from_observation(agent, position, observation):
         observation:
     Returns: array of shape (2 * agent.view_radius + 1, 2 * agent.view_radius + 1)
     """
-    side_length = 2 * agent.view_radius + 1
+    side_length = agent.limit_board
     # Defaults to zero (not accessible)
-    board = [[-1 for i in range(side_length)] for j in range(side_length)]
-    view_area = agent.view_area(position)
+    board = [[0 for i in range(side_length[1])] for j in range(side_length[0])]
     x_a, y_a = position
+    board[x_a][y_a] = -1
     # Set to zero every position in field of view
-    for (x, y) in view_area:
-        i, j = int(x - x_a + agent.view_radius), int(y - y_a + agent.view_radius)
-        board[i][j] = 0
-    # Set to values the other agents
     for obs in observation:
         x, y = obs.position
-        i, j = int(x - x_a + agent.view_radius)-1, int(y - y_a + agent.view_radius)-1
+        board[x][y] = 0
         if obs.type == agent.type:
-            board[i][j] = 0.5
+            board[x][y] = 0.5
         else:
-            board[i][j] = 1
+            board[x][y] = 1
     return np.array(board)
 
 
