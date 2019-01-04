@@ -104,4 +104,4 @@ class Env:
             agent.plot(self.agent_radius)
 
         plt.draw()
-        plt.pause(0.001)
+        plt.pause(0.0001)

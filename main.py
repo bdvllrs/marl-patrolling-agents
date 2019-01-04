@@ -13,7 +13,7 @@ env = sim.Env(width=100, height=100, reward_type=reward_type)
 n_episodes = 10000
 batch_size = 64
 plot_episode_every = 1000
-env.max_length_episode = 200  # time to go across the board and do a pursuit
+env.max_length_episode = 100  # time to go across the board and do a pursuit
 print_every = 1
 plot_loss = []
 
@@ -27,7 +27,7 @@ env.add_agent(target)
 
 start = time.time()
 
-for episode in range(n_episodes):
+for episode in range(1, n_episodes):
     states = env.reset()
     # Draw the board
     if episode % plot_episode_every:

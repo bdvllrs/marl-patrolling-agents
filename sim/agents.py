@@ -35,6 +35,7 @@ class Agent:
         self.histories = []  # Memory for all the episodes
         self.loss_values = []
         self.reward_values = []
+        self.view_area_memoize = None
 
     def reset(self):
         if len(self.histories) > 0:
@@ -69,6 +70,11 @@ class Agent:
         """
         Defines the points in the board the agent can see
         """
+        if self.view_area_memoize is not None:
+            return self.view_area_memoize
+        if self.view_radius >= self.limit_board[0]:
+            self.view_area_memoize = [(x, y) for x in range(self.limit_board[0]) for y in range(self.limit_board[1])]
+            return self.view_area_memoize
         position = self.position if position is None else position
         positions = [position]
         x, y = position
@@ -173,16 +179,17 @@ class Officer(RLAgent):
         Args:
             obs: information on where are the other agents. List of agents.
         """
-        state = state_from_observation(self, self.position, obs)
+        # state = state_from_observation(self, self.position, obs)
         # TODO: predict the right action with the target net
-        action = self.select_action(state)
+        # action = self.select_action(state)
 
         #print(action)
+        return choice(possible_directions(self.limit_board, self.position))
 
-        actions_possible = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
-         'bottom-left']
-        index = action[0][0].item()
-        return actions_possible[index]
+        # actions_possible = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
+        #  'bottom-left']
+        # index = action[0][0].item()
+        # return actions_possible[index]
 
 
 class Headquarters(Agent):
