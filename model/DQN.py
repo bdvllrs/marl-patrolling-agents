@@ -9,12 +9,13 @@ class DQN(nn.Module):
 
     def __init__(self, h):
         super(DQN, self).__init__()
-        self.linear_input_size = (2*h+1)**2
-        self.head = nn.Linear(self.linear_input_size, 9) # 448 or 512
+        self.linear_input_size = (h*h)
+        self.head = nn.Linear(self.linear_input_size, 100)  # 448 or 512
+        self.head2 = nn.Linear(100, 9) # 448 or 512
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x = self.head(x)
+        x = self.head2(self.head(x))
         #print(x.shape)
         return x

@@ -20,7 +20,7 @@ class Agent:
     color = "red"
     limit_board = None
     view_radius = 10  # manhattan distance
-    max_size_history = 20000
+    max_size_history = 1000
     can_learn = False
 
     def __init__(self, name=None):
@@ -52,7 +52,6 @@ class Agent:
         self.histories[-1]['action'] = action
         self.last_action = action
         self.histories[-1]['state'] = state_from_observation(self, self.histories[-1]['position'], obs)
-        print(self.histories[-1]['state'])
         if len(self.histories) > 2 and "state" in self.histories[-2].keys():
             self.histories[-1]["prev_state"] = self.histories[-2]["state"]
 
