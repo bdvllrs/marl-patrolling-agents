@@ -12,7 +12,7 @@ reward_type = "full"
 env = sim.Env(width=100, height=100, reward_type=reward_type)
 n_episodes = 10000
 batch_size = 64
-plot_episode_every = 100
+plot_episode_every = 1
 env.max_length_episode = 100  # time to go across the board and do a pursuit
 print_every = 100
 plot_loss = []
