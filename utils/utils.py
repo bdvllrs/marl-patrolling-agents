@@ -1,5 +1,8 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import random
+
+plt.ion()
 
 
 def choice(l):
@@ -212,23 +215,21 @@ def sample_batch_history(agent, batch_size, memory=10000):
     return None
 
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-plt.ion()
-
-
-def draw_result(env):
+def draw_result(meter):
     plt.figure(1)
-    for agent in env.agents:
-        if agent.can_learn:
-            lst_loss = agent.loss_values
-            lst_reward = agent.reward_values
-            plt.plot(lst_loss, label='Loss ' + str(agent.name))
-            plt.plot(lst_reward, label='Reward ' + str(agent.name))
+    plt.clf()
+    plt.subplot('121')
+    for _, losses in sorted(meter["losses"].items()):
+        plt.plot(meter["episodes"], losses)
+    plt.title('Losses')
+    plt.subplot('122')
+    for _, returns in sorted(meter["returns"].items()):
+        plt.plot(meter["episodes"], returns)
+    plt.title('Returns')
 
     plt.xlabel("n iteration")
-    plt.legend(loc='upper left')
-    plt.title("Lost_Reward")
+    plt.legend([name for name, _ in sorted(meter['losses'].items())], loc='upper left')
+    plt.savefig("fig/losses.eps", format="eps", dpi=1000)  # should before show method
+    plt.draw()
+    plt.pause(0.0001)
     # save image
-    plt.savefig("Lost_Reward.png")  # should before show method

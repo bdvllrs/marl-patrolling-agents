@@ -12,7 +12,7 @@ class Env:
     """
 
     agent_radius = 1
-    noise = 0.2
+    noise = 0.01
     max_length_episode = None
     current_iter = 0
 
@@ -33,6 +33,7 @@ class Env:
         self.agents = []
         self.initial_positions = []
         self.reward_function = sparse_reward if reward_type == 'sparse' else full_reward
+        self.has_finished = False
 
     def random_position(self):
         return np.random.randint(0, self.width), np.random.randint(0, self.height)
@@ -49,6 +50,7 @@ class Env:
 
     def reset(self):
         self.current_iter = 0
+        self.has_finished = False
         positions = []
         for k, agent in enumerate(self.agents):
             agent.reset()  # resets agents
@@ -94,6 +96,8 @@ class Env:
             agent.set_position(next_position)
             positions.append(agent.position)
             agent.add_to_history(action, obs)
+
+        terminal_state, self.has_finished = self.has_finished, terminal_state
 
         # Give rewards
         rewards = self.give_rewards()

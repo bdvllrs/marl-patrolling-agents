@@ -19,8 +19,8 @@ class Agent:
     last_action = None
     color = "red"
     limit_board = None
-    view_radius = 10  # manhattan distance
-    max_size_history = 300
+    view_radius = 5  # manhattan distance
+    max_size_history = 1000
     can_learn = False
 
     def __init__(self, name=None):
@@ -129,8 +129,8 @@ class RLAgent(Agent):
         self.view_radius = 100
         self.gamma = gamma
         self.EPS_START = 0.9
-        self.EPS_END = 0.05
-        self.EPS_DECAY = 200
+        self.EPS_END = 0.1
+        self.EPS_DECAY = 1000
         self.steps_done = 0
         # TODO: Define here policy and target net
 
@@ -151,7 +151,7 @@ class RLAgent(Agent):
 
         state = torch.from_numpy(state).float().to(device).unsqueeze(0)
         h = state.shape[-1]
-        state = state.reshape(1, h * h)
+        state = state.reshape(1, h, h)
 
         if sample > eps_threshold:
             with torch.no_grad():
@@ -160,7 +160,7 @@ class RLAgent(Agent):
                 # found, so we pick action with the larger expected reward.
                 return self.policy_net(state).max(1)[1]  # .view(1, 1)
         else:
-            return torch.tensor([random.randrange(9)], device=device, dtype=torch.long)
+            return None
 
 
 class Officer(RLAgent):
@@ -185,8 +185,11 @@ class Officer(RLAgent):
 
         actions_possible = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
                             'bottom-left']
-        index = action[0][0].item()
-        return actions_possible[index]
+        if action is not None:
+            index = action.item()
+            return actions_possible[index]
+        else:
+            return choice(actions_possible)
 
 
 class Headquarters(Agent):
