@@ -3,6 +3,7 @@ from model.optimizer import optimize_model
 import time
 import numpy as np
 from utils.utils import draw_result, random_position_around_point
+from utils.rewards import compute_discounted_return
 
 import matplotlib.pyplot as plt
 
@@ -12,56 +13,79 @@ number_officers = 3
 reward_type = "full"
 width = height = 100
 env = sim.Env(width=width, height=height, reward_type=reward_type)
-n_episodes = 10000
+n_epochs = 500
+n_episodes = 10
+n_learning = 10
 batch_size = 64
-plot_episode_every = 30
-env.max_length_episode = 100  # time to go across the board and do a pursuit
-print_every = 30
-increase_spawn_circle_every = [10, 10, 10] + [30] * 3
-spawn_distance = [2, 3, 5, 10, 50, 100]
+plot_episode_every = 1
+env.max_length_episode = 200  # time to go across the board and do a pursuit
+print_every = 1
+increase_spawn_circle_every = [50, 30, 20] + [100] * 3
+spawn_distance = [2, 5, 10, 100, 100, 100]
 spawn_index = 0
+k_spawn = 0
 plot_loss = []
 
 officers = [sim.Officer("Officer " + str(k)) for k in range(number_officers)]
 target = sim.Target()  # One target
 
 x_target, y_target = np.random.randint(0, width), np.random.randint(0, height)
-env.add_agent(target)
+env.add_agent(target, (x_target, y_target))
 
 for officer in officers:
     position = random_position_around_point((x_target, y_target), spawn_distance[spawn_index], (width, height))
     env.add_agent(officer, position)
 
+meter = {
+    "losses": {agent.name: [] for agent in env.agents if agent.can_learn},
+    "returns": {agent.name: [] for agent in env.agents if agent.can_learn},
+    "episodes": []
+}
+
 start = time.time()
 
-for episode in range(1, n_episodes + 1):
-    states = env.reset()
-    # Draw the board
-    if not episode % plot_episode_every:
-        env.draw_board()
-    terminal = False
-    # Do an episode
-    while not terminal:
-        states, actions, rewards, terminal = env.step()
-        if not episode % plot_episode_every:
+for epoch in range(n_epochs):
+    for episode in range(1, n_episodes + 1):
+        states = env.reset()
+        # Draw the board
+        if not epoch % plot_episode_every and episode == 1:
             env.draw_board()
+        terminal = False
+        all_rewards = []
+        # Do an episode
+        while not terminal:
+            states, actions, rewards, terminal = env.step()
+            all_rewards.append(rewards)
+            if not epoch % plot_episode_every and episode == 1:
+                env.draw_board()
+        all_rewards = np.array(all_rewards)
 
-    # Learning step
-    optimize_model(env, batch_size, episode)
-
-    if episode % print_every == 0:
-        print("Episode Num ", episode)
-        print("Time : ", time.time() - start)
-        draw_result(env)
-        print("Save fig")
-
-    # Update positions
-    if not episode % increase_spawn_circle_every[spawn_index] and spawn_index < len(spawn_distance) - 1:
-        print('Increasing spawn distance to', spawn_distance[spawn_index])
-        spawn_index += 1
+        # Update meter
+        meter["episodes"].append(epoch * n_episodes + episode)
+        for k, agent in enumerate(env.agents):
+            if agent.can_learn:
+                meter["losses"][agent.name].append(np.mean(agent.loss_values))
+                meter["returns"][agent.name].append(compute_discounted_return(all_rewards[:, k], agent.gamma))
 
     x_target, y_target = np.random.randint(0, width), np.random.randint(0, height)
     env.set_position(target, (x_target, y_target))
     for officer in officers:
         position = random_position_around_point((x_target, y_target), spawn_distance[spawn_index], (width, height))
         env.set_position(officer, position)
+
+    k_spawn += 1
+
+    # Learning step
+    for k in range(n_learning):
+        optimize_model(env, batch_size, epoch)
+
+    if epoch % print_every == 0:
+        print("Episode Num ", episode)
+        print("Time: ", time.time() - start)
+        draw_result(meter)
+
+    # Update positions
+    if k_spawn == increase_spawn_circle_every[spawn_index] and spawn_index < len(spawn_distance) - 1:
+        k_spawn = 0
+        spawn_index += 1
+        print('Increasing spawn distance to', spawn_distance[spawn_index])

@@ -37,6 +37,14 @@ def sparse_reward(agents, t):
     return rewards
 
 
+def dist_reward(agents, t):
+    rewards = []
+    for agent in agents:
+        x, y = agent.position
+        rewards.append(10000 - (x - 10) ** 2 - (y - 10) ** 2)
+    return rewards
+
+
 def full_reward(agents, t):
     """
     Gives a reward at each step:
@@ -60,11 +68,11 @@ def full_reward(agents, t):
             num_officers += 1
     for agent in agents:
         if agent.type == "officer" and officer_won:
-            rewards.append(1000/(2**t))
+            rewards.append(1000)
         else:
             new_x, new_y = agent.position
             if new_x >= agent.limit_board[0] or new_y >= agent.limit_board[1] or new_x < 0 or new_y < 0:
-                rewards.append(-10000)
+                rewards.append(-1000)
             else:
                 distances = distance_enemies_around(agent, agents)
                 if agent.type == "target":
@@ -77,6 +85,21 @@ def full_reward(agents, t):
                         reward = 0
                     else:
                         reward = agent.view_radius * num_targets - sum(distances)
-                reward /= 2 ** t
+                # reward /= 2 ** t
                 rewards.append(reward)
     return rewards
+
+
+def compute_discounted_return(rewards, gamma):
+    """
+    Compute discounted return of an episode
+    Args:
+        rewards: rewrads of the episode
+        gamma: discount factor
+    """
+    discounted_return = 0
+    discount = 1
+    for reward in rewards:
+        discounted_return += discount * reward
+        discount *= gamma
+    return discounted_return
