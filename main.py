@@ -13,15 +13,16 @@ number_officers = 3
 reward_type = "full"
 width = height = 100
 env = sim.Env(width=width, height=height, reward_type=reward_type)
-n_epochs = 500
+n_epochs = 50000
 n_episodes = 10
 n_learning = 10
 batch_size = 64
-plot_episode_every = 1
-env.max_length_episode = 200  # time to go across the board and do a pursuit
-print_every = 1
-increase_spawn_circle_every = [50, 30, 20] + [100] * 3
-spawn_distance = [2, 5, 10, 100, 100, 100]
+plot_episode_every = 100
+
+env.max_length_episode = 50  # time to go across the board and do a pursuit
+print_every = 10
+increase_spawn_circle_every = [1]
+spawn_distance = [10]
 spawn_index = 0
 k_spawn = 0
 plot_loss = []
@@ -61,11 +62,12 @@ for epoch in range(n_epochs):
         all_rewards = np.array(all_rewards)
 
         # Update meter
-        meter["episodes"].append(epoch * n_episodes + episode)
-        for k, agent in enumerate(env.agents):
-            if agent.can_learn:
-                meter["losses"][agent.name].append(np.mean(agent.loss_values))
-                meter["returns"][agent.name].append(compute_discounted_return(all_rewards[:, k], agent.gamma))
+        if not epoch % print_every:
+            meter["episodes"].append(epoch * n_episodes + episode)
+            for k, agent in enumerate(env.agents):
+                if agent.can_learn:
+                    meter["losses"][agent.name].append(np.mean(agent.loss_values))
+                    meter["returns"][agent.name].append(compute_discounted_return(all_rewards[:, k], agent.gamma))
 
     x_target, y_target = np.random.randint(0, width), np.random.randint(0, height)
     env.set_position(target, (x_target, y_target))
