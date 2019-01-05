@@ -129,8 +129,8 @@ class RLAgent(Agent):
         self.view_radius = 100
         self.gamma = gamma
         self.EPS_START = 0.9
-        self.EPS_END = 0.1
-        self.EPS_DECAY = 1000
+        self.EPS_END = 0.4
+        self.EPS_DECAY = 500000
         self.steps_done = 0
         # TODO: Define here policy and target net
 
