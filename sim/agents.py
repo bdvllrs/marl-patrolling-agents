@@ -132,8 +132,6 @@ class RLAgent(Agent):
         self.EPS_END = 0.4
         self.EPS_DECAY = 500000
         self.steps_done = 0
-        # TODO: Define here policy and target net
-
         self.policy_net = DQN(view_radius).to(device)
         self.target_net = DQN(view_radius).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -178,11 +176,7 @@ class Officer(RLAgent):
             obs: information on where are the other agents. List of agents.
         """
         state = state_from_observation(self, self.position, obs)
-        # TODO: predict the right action with the target net
         action = self.select_action(state)
-
-        # print(action)
-
         actions_possible = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
                             'bottom-left']
         if action is not None:

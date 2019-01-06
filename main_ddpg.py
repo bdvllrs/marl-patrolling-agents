@@ -1,5 +1,5 @@
 import sim
-from model.optimizer import optimize_model
+from model.optimizer_dqn import optimize_model
 import time
 import numpy as np
 from utils.utils import draw_result, random_position_around_point
@@ -79,10 +79,11 @@ for epoch in range(n_epochs):
 
     # Learning step
     for k in range(n_learning):
-        optimize_model(env, batch_size, epoch)
+        pass
+
 
     if epoch % print_every == 0:
-        print("Episode Num ", episode)
+        print("Episode Num ", epoch)
         print("Time: ", time.time() - start)
         draw_result(meter)
 
