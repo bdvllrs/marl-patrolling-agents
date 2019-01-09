@@ -9,14 +9,16 @@ import matplotlib.pyplot as plt
 
 plt.show()
 
+
+
 number_officers = 3
 reward_type = "full"
 width = height = 15
 env = sim.Env(width=width, height=height, reward_type=reward_type)
 n_epochs = 50000
-n_episodes = 10
+n_episodes = 30
 n_learning = 10
-batch_size = 64
+batch_size = 128
 plot_episode_every = 100
 
 env.max_length_episode = 50  # time to go across the board and do a pursuit

@@ -4,7 +4,8 @@ import torch.nn.functional as F
 
 # if gpu is to be used
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device ="cpu"
 print(device)
 
 
@@ -41,13 +42,13 @@ def optimize_model(env, batch_size, episode):
             # Compute the expected Q values
             expected_state_action_values = (next_state_values.to(device) * agent.gamma) + reward_batch.to(device)
 
+            agent.optimizer.zero_grad()
             # Compute Huber loss
             loss = F.mse_loss(state_action_values, expected_state_action_values.unsqueeze(1))
+            loss.backward()
             agent.loss_values.append(loss.item())
             agent.reward_values.append(reward_batch.mean())
             # Optimize the model
-            agent.optimizer.zero_grad()
-            loss.backward()
             for param in agent.policy_net.parameters():
                 param.grad.data.clamp_(-1, 1)
             agent.optimizer.step()

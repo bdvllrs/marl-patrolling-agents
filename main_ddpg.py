@@ -1,7 +1,8 @@
+from tensorboardX import SummaryWriter
 from torch.autograd import Variable
-
+import os
+from pathlib import Path
 import sim
-from model import DDPG
 from model.Buffer import ReplayBuffer
 from model.optimizer_ddpg import *
 import time
@@ -35,7 +36,26 @@ n_rollout_threads = 1
 plot_loss = []
 USE_CUDA = True
 steps_per_update = 100
+save_interval = 1000
+env_id = "test_compile"
+model_name = "DDPG"
 
+model_dir = Path('./models') / env_id / model_name
+if not model_dir.exists():
+    curr_run = 'run1'
+else:
+    exst_run_nums = [int(str(folder.name).split('run')[1]) for folder in
+                     model_dir.iterdir() if
+                     str(folder.name).startswith('run')]
+    if len(exst_run_nums) == 0:
+        curr_run = 'run1'
+    else:
+        curr_run = 'run%i' % (max(exst_run_nums) + 1)
+run_dir = model_dir / curr_run
+log_dir = run_dir / 'logs'
+
+
+logger = SummaryWriter(str(log_dir))
 
 ddpg = Trainer.init_from_env(env)
 
@@ -126,9 +146,9 @@ for epoch in range(n_epochs):
                 ddpg.prep_training(device='gpu')
             else:
                 ddpg.prep_training(device='cpu')
-            for u_i in range(config.n_rollout_threads):
+            for u_i in range(n_rollout_threads):
                 for a_i in range(ddpg.nagents):
-                    sample = replay_buffer.sample(config.batch_size,
+                    sample = replay_buffer.sample(batch_size,
                                                   to_gpu=USE_CUDA)
                     ddpg.update(sample, a_i, logger=logger)
                 ddpg.update_all_targets()
@@ -136,11 +156,11 @@ for epoch in range(n_epochs):
     ep_rews = replay_buffer.get_average_rewards(
         n_learning * n_rollout_threads)
     for a_i, a_ep_rew in enumerate(ep_rews):
-        logger.add_scalar('agent%i/mean_episode_rewards' % a_i, a_ep_rew, ep_i)
+        logger.add_scalar('agent%i/mean_episode_rewards' % a_i, a_ep_rew, k)
 
-    if ep_i % config.save_interval < config.n_rollout_threads:
+    if k % save_interval < n_rollout_threads:
         os.makedirs(run_dir / 'incremental', exist_ok=True)
-        ddpg.save(run_dir / 'incremental' / ('model_ep%i.pt' % (ep_i + 1)))
+        ddpg.save(run_dir / 'incremental' / ('model_ep%i.pt' % (k + 1)))
         ddpg.save(run_dir / 'model.pt')
 
 

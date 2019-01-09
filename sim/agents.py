@@ -8,7 +8,9 @@ import torch
 
 __all__ = ["Officer", "Target", "Headquarters"]
 # if gpu is to be used
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cpu"
+print(device)
 
 
 class Agent:
@@ -136,7 +138,7 @@ class RLAgent(Agent):
         self.target_net = DQN(view_radius).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
-        self.optimizer = optim.RMSprop(self.policy_net.parameters())
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.001)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
