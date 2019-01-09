@@ -1,104 +1,162 @@
-import torch
+from torch import Tensor
+from torch.autograd import Variable
+from torch.optim import Adam
+from utils.utils import hard_update, gumbel_softmax, onehot_from_logits
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-EPS = 0.003
-
-def fanin_init(size, fanin=None):
-	fanin = fanin or size[0]
-	v = 1. / np.sqrt(fanin)
-	return torch.Tensor(size).uniform_(-v, v)
-
-class Critic(nn.Module):
-
-	def __init__(self, state_dim, action_dim):
-		"""
-		:param state_dim: Dimension of input state (int)
-		:param action_dim: Dimension of input action (int)
-		:return:
-		"""
-		super(Critic, self).__init__()
-
-		self.state_dim = state_dim
-		self.action_dim = action_dim
-
-		self.fcs1 = nn.Linear(state_dim,256)
-		self.fcs1.weight.data = fanin_init(self.fcs1.weight.data.size())
-		self.fcs2 = nn.Linear(256,128)
-		self.fcs2.weight.data = fanin_init(self.fcs2.weight.data.size())
-
-		self.fca1 = nn.Linear(action_dim,128)
-		self.fca1.weight.data = fanin_init(self.fca1.weight.data.size())
-
-		self.fc2 = nn.Linear(256,128)
-		self.fc2.weight.data = fanin_init(self.fc2.weight.data.size())
-
-		self.fc3 = nn.Linear(128,1)
-		self.fc3.weight.data.uniform_(-EPS,EPS)
-
-	def forward(self, state, action):
-		"""
-		returns Value function Q(s,a) obtained from critic network
-		:param state: Input state (Torch Variable : [n,state_dim] )
-		:param action: Input Action (Torch Variable : [n,action_dim] )
-		:return: Value function : Q(S,a) (Torch Variable : [n,1] )
-		"""
-		s1 = F.relu(self.fcs1(state))
-		s2 = F.relu(self.fcs2(s1))
-		a1 = F.relu(self.fca1(action))
-		x = torch.cat((s2,a1),dim=1)
-
-		x = F.relu(self.fc2(x))
-		x = self.fc3(x)
-
-		return x
 
 
-class Actor(nn.Module):
+# from https://github.com/songrotek/DDPG/blob/master/ou_noise.py
+class OUNoise:
+    def __init__(self, action_dimension, scale=0.1, mu=0, theta=0.15, sigma=0.2):
+        self.action_dimension = action_dimension
+        self.scale = scale
+        self.mu = mu
+        self.theta = theta
+        self.sigma = sigma
+        self.state = np.ones(self.action_dimension) * self.mu
+        self.reset()
 
-	def __init__(self, state_dim, action_dim, action_lim):
-		"""
-		:param state_dim: Dimension of input state (int)
-		:param action_dim: Dimension of output action (int)
-		:param action_lim: Used to limit action in [-action_lim,action_lim]
-		:return:
-		"""
-		super(Actor, self).__init__()
+    def reset(self):
+        self.state = np.ones(self.action_dimension) * self.mu
 
-		self.state_dim = state_dim
-		self.action_dim = action_dim
-		self.action_lim = action_lim
+    def noise(self):
+        x = self.state
+        dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(len(x))
+        self.state = x + dx
+        return self.state * self.scale
 
-		self.fc1 = nn.Linear(state_dim,256)
-		self.fc1.weight.data = fanin_init(self.fc1.weight.data.size())
 
-		self.fc2 = nn.Linear(256,128)
-		self.fc2.weight.data = fanin_init(self.fc2.weight.data.size())
+class MLPNetwork(nn.Module):
+    """
+    MLP network (can be used as value or policy)
+    """
+    def __init__(self, input_dim, out_dim, hidden_dim=64, nonlin=F.relu,
+                 constrain_out=False, norm_in=True, discrete_action=True):
+        """
+        Inputs:
+            input_dim (int): Number of dimensions in input
+            out_dim (int): Number of dimensions in output
+            hidden_dim (int): Number of hidden dimensions
+            nonlin (PyTorch function): Nonlinearity to apply to hidden layers
+        """
+        super(MLPNetwork, self).__init__()
 
-		self.fc3 = nn.Linear(128,64)
-		self.fc3.weight.data = fanin_init(self.fc3.weight.data.size())
+        if norm_in:  # normalize inputs
+            self.in_fn = nn.BatchNorm1d(input_dim)
+            self.in_fn.weight.data.fill_(1)
+            self.in_fn.bias.data.fill_(0)
+        else:
+            self.in_fn = lambda x: x
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc3 = nn.Linear(hidden_dim, out_dim)
+        self.nonlin = nonlin
+        if constrain_out and not discrete_action:
+            # initialize small to prevent saturation
+            self.fc3.weight.data.uniform_(-3e-3, 3e-3)
+            self.out_fn = F.tanh
+        else:  # logits for discrete action (will softmax later)
+            self.out_fn = lambda x: x
 
-		self.fc4 = nn.Linear(64,action_dim)
-		self.fc4.weight.data.uniform_(-EPS,EPS)
-
-	def forward(self, state):
-		"""
-		returns policy function Pi(s) obtained from actor network
-		this function is a gaussian prob distribution for all actions
-		with mean lying in (-1,1) and sigma lying in (0,1)
-		The sampled action can , then later be rescaled
-		:param state: Input state (Torch Variable : [n,state_dim] )
-		:return: Output action (Torch Variable: [n,action_dim] )
-		"""
-		x = F.relu(self.fc1(state))
-		x = F.relu(self.fc2(x))
-		x = F.relu(self.fc3(x))
-		action = F.tanh(self.fc4(x))
-
-		action = action * self.action_lim
-
-		return action
+    def forward(self, X):
+        """
+        Inputs:
+            X (PyTorch Matrix): Batch of observations
+        Outputs:
+            out (PyTorch Matrix): Output of network (actions, values, etc)
+        """
+        h1 = self.nonlin(self.fc1(self.in_fn(X)))
+        h2 = self.nonlin(self.fc2(h1))
+        out = self.out_fn(self.fc3(h2))
+        return out
 
 
 
+
+class DDPGAgent(object):
+    """
+    General class for DDPG agents (policy, critic, target policy, target
+    critic, exploration noise)
+    """
+    def __init__(self, num_in_pol, num_out_pol, num_in_critic, hidden_dim=64,
+                 lr=0.01, discrete_action=True):
+        """
+        Inputs:
+            num_in_pol (int): number of dimensions for policy input
+            num_out_pol (int): number of dimensions for policy output
+            num_in_critic (int): number of dimensions for critic input
+        """
+        self.policy = MLPNetwork(num_in_pol, num_out_pol,
+                                 hidden_dim=hidden_dim,
+                                 constrain_out=True,
+                                 discrete_action=discrete_action)
+        self.critic = MLPNetwork(num_in_critic, 1,
+                                 hidden_dim=hidden_dim,
+                                 constrain_out=False)
+        self.target_policy = MLPNetwork(num_in_pol, num_out_pol,
+                                        hidden_dim=hidden_dim,
+                                        constrain_out=True,
+                                        discrete_action=discrete_action)
+        self.target_critic = MLPNetwork(num_in_critic, 1,
+                                        hidden_dim=hidden_dim,
+                                        constrain_out=False)
+        hard_update(self.target_policy, self.policy)
+        hard_update(self.target_critic, self.critic)
+        self.policy_optimizer = Adam(self.policy.parameters(), lr=lr)
+        self.critic_optimizer = Adam(self.critic.parameters(), lr=lr)
+        if not discrete_action:
+            self.exploration = OUNoise(num_out_pol)
+        else:
+            self.exploration = 0.3  # epsilon for eps-greedy
+        self.discrete_action = discrete_action
+
+    def reset_noise(self):
+        if not self.discrete_action:
+            self.exploration.reset()
+
+    def scale_noise(self, scale):
+        if self.discrete_action:
+            self.exploration = scale
+        else:
+            self.exploration.scale = scale
+
+    def step(self, obs, explore=False):
+        """
+        Take a step forward in environment for a minibatch of observations
+        Inputs:
+            obs (PyTorch Variable): Observations for this agent
+            explore (boolean): Whether or not to add exploration noise
+        Outputs:
+            action (PyTorch Variable): Actions for this agent
+        """
+        action = self.policy(obs)
+        if self.discrete_action:
+            if explore:
+                action = gumbel_softmax(action, hard=True)
+            else:
+                action = onehot_from_logits(action)
+        else:  # continuous action
+            if explore:
+                action += Variable(Tensor(self.exploration.noise()),
+                                   requires_grad=False)
+            action = action.clamp(-1, 1)
+        return action
+
+    def get_params(self):
+        return {'policy': self.policy.state_dict(),
+                'critic': self.critic.state_dict(),
+                'target_policy': self.target_policy.state_dict(),
+                'target_critic': self.target_critic.state_dict(),
+                'policy_optimizer': self.policy_optimizer.state_dict(),
+                'critic_optimizer': self.critic_optimizer.state_dict()}
+
+    def load_params(self, params):
+        self.policy.load_state_dict(params['policy'])
+        self.critic.load_state_dict(params['critic'])
+        self.target_policy.load_state_dict(params['target_policy'])
+        self.target_critic.load_state_dict(params['target_critic'])
+        self.policy_optimizer.load_state_dict(params['policy_optimizer'])
+        self.critic_optimizer.load_state_dict(params['critic_optimizer'])

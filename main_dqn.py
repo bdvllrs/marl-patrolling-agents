@@ -11,7 +11,7 @@ plt.show()
 
 number_officers = 3
 reward_type = "full"
-width = height = 100
+width = height = 15
 env = sim.Env(width=width, height=height, reward_type=reward_type)
 n_epochs = 50000
 n_episodes = 10

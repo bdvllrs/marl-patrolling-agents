@@ -27,7 +27,7 @@ class DQN(nn.Module):
             nn.ReLU()
         )
         self.fc = nn.Sequential(
-            nn.Linear(h * w, 9),
+            nn.Linear(49, 9),
             nn.Softmax(dim=1)
         )
 
