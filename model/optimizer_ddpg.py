@@ -214,7 +214,7 @@ class Trainer(object):
         """
         agent_init_params = []
         alg_types = [adversary_alg if atype == 'adversary' else agent_alg for
-                     atype in env.agent_types]
+                     atype in env.agents]
         for acsp, obsp, algtype in zip(env.action_space, env.observation_space,
                                        alg_types):
             num_in_pol = obsp.shape[0]

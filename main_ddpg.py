@@ -79,8 +79,6 @@ meter = {
     "episodes": []
 }
 
-trainer = Trainer(100*100, 9, 9, env)
-
 start = time.time()
 
 t = 0
