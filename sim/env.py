@@ -75,25 +75,26 @@ class Env:
         terminal_state = False if self.max_length_episode is None else self.current_iter >= self.max_length_episode
         actions = []
         positions = []
-        observations = self.agents[:]
-        for agent in observations:
-            for other_agent in observations:
-                if agent.type == 'target' and other_agent.type == 'officer':
-                    num_officers_around = len(distance_enemies_around(agent, observations, max_distance=1))
-                    if num_officers_around >= 2:
-                        terminal_state = True
-            action = agent.draw_action(observations)
-            actions.append(action)
+        for agent in self.agents:
+            action = agent.draw_action(self.agents)
             if np.random.rand() < self.noise:
                 # We select a position at random and not the one selected
                 action = choice(possible_directions(agent.limit_board, agent.position))
+            actions.append(action)
+        for k, agent in enumerate(self.agents):
+            action = actions[k]
+            for other_agent in self.agents:
+                if agent.type == 'target' and other_agent.type == 'officer':
+                    num_officers_around = len(distance_enemies_around(agent, self.agents, max_distance=1))
+                    if num_officers_around >= 2:
+                        terminal_state = True
             next_position = position_from_direction(agent.position, action)
             # new_x, new_y = next_position
             # if new_x >= self.width or new_y >= self.height or new_x < 0 or new_y < 0:
             #     terminal_state = True
             agent.set_position(next_position)
             positions.append(agent.position)
-            agent.add_to_history(action, observations)
+            agent.add_to_history(action, self.agents)
 
         terminal_state, self.has_finished = self.has_finished, terminal_state
 
