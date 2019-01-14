@@ -13,7 +13,7 @@ class Env:
 
     agent_radius = 1
     noise = 0.01
-    max_length_episode = None
+    max_length_episode = 50
     current_iter = 0
 
     def __init__(self, width, height, reward_type='full'):
@@ -90,9 +90,9 @@ class Env:
                 # We select a position at random and not the one selected
                 action = choice(possible_directions(agent.limit_board, agent.position))
             next_position = position_from_direction(agent.position, action)
-            new_x, new_y = next_position
-            if new_x >= self.width or new_y >= self.height or new_x < 0 or new_y < 0:
-                terminal_state = True
+            # new_x, new_y = next_position
+            # if new_x >= self.width or new_y >= self.height or new_x < 0 or new_y < 0:
+            #     terminal_state = True
             agent.set_position(next_position)
             positions.append(agent.position)
             agent.add_to_history(action, obs)

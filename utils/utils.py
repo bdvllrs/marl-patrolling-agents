@@ -8,7 +8,6 @@ import torch.nn.functional as F
 import torch.distributed as dist
 from torch.autograd import Variable
 
-
 plt.ion()
 
 
@@ -106,33 +105,36 @@ def get_distance_between(limit_board, position_1, position_2):
         position_1: position 1
         position_2: position 2
     """
-    positions = [position_from_direction(position_2, direction) for direction in
-                 possible_directions(limit_board, position_2)]
-    if position_1 in positions:
-        return 1
     x, y = position_1
     x_2, y_2 = position_2
-    x_new, y_new = position_1
-    if x < x_2:
-        if y < y_2:
-            x_new, y_new = x + 1, y + 1
-        elif y == y_2:
-            x_new = x + 1
-        else:
-            x_new, y_new = x + 1, y - 1
-    elif x == x_2:
-        if y < y_2:
-            y_new = y + 1
-        elif y > y_2:
-            y_new = y - 1
-    else:
-        if y < y_2:
-            x_new, y_new = x - 1, y + 1
-        elif y == y_2:
-            x_new = x - 1
-        else:
-            x_new, y_new = x - 1, y - 1
-    return 1 + get_distance_between(limit_board, (x_new, y_new), position_2)
+    return ((x - x_2) ** 2 + (y - y_2) ** 2) ** 0.5
+    # positions = [position_from_direction(position_2, direction) for direction in
+    #              possible_directions(limit_board, position_2)]
+    # if position_1 in positions:
+    #     return 1
+    # x, y = position_1
+    # x_2, y_2 = position_2
+    # x_new, y_new = position_1
+    # if x < x_2:
+    #     if y < y_2:
+    #         x_new, y_new = x + 1, y + 1
+    #     elif y == y_2:
+    #         x_new = x + 1
+    #     else:
+    #         x_new, y_new = x + 1, y - 1
+    # elif x == x_2:
+    #     if y < y_2:
+    #         y_new = y + 1
+    #     elif y > y_2:
+    #         y_new = y - 1
+    # else:
+    #     if y < y_2:
+    #         x_new, y_new = x - 1, y + 1
+    #     elif y == y_2:
+    #         x_new = x - 1
+    #     else:
+    #         x_new, y_new = x - 1, y - 1
+    # return 1 + get_distance_between(limit_board, (x_new, y_new), position_2)
 
 
 def distance_enemies_around(agent, agents, max_distance=None):
@@ -241,6 +243,7 @@ def draw_result(meter):
     plt.pause(0.0001)
     # save image
 
+
 def soft_update(target, source, tau):
     """
     Copies the parameters from source network (x) to target network (y) using the below update
@@ -263,7 +266,7 @@ def hard_update(target, source):
     :return:
     """
     for target_param, param in zip(target.parameters(), source.parameters()):
-            target_param.data.copy_(param.data)
+        target_param.data.copy_(param.data)
 
 
 def save_training_checkpoint(state, is_best, episode_count):
@@ -280,7 +283,6 @@ def save_training_checkpoint(state, is_best, episode_count):
         shutil.copyfile(filename, 'model_best.pth.tar')
 
 
-
 # https://github.com/ikostrikov/pytorch-ddpg-naf/blob/master/ddpg.py#L11
 def soft_update(target, source, tau):
     """
@@ -294,6 +296,7 @@ def soft_update(target, source, tau):
     for target_param, param in zip(target.parameters(), source.parameters()):
         target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
+
 # https://github.com/ikostrikov/pytorch-ddpg-naf/blob/master/ddpg.py#L15
 def hard_update(target, source):
     """
@@ -305,6 +308,7 @@ def hard_update(target, source):
     for target_param, param in zip(target.parameters(), source.parameters()):
         target_param.data.copy_(param.data)
 
+
 # https://github.com/seba-1511/dist_tuto.pth/blob/gh-pages/train_dist.py
 def average_gradients(model):
     """ Gradient averaging. """
@@ -313,6 +317,7 @@ def average_gradients(model):
         dist.all_reduce(param.grad.data, op=dist.reduce_op.SUM, group=0)
         param.grad.data /= size
 
+
 # https://github.com/seba-1511/dist_tuto.pth/blob/gh-pages/train_dist.py
 def init_processes(rank, size, fn, backend='gloo'):
     """ Initialize the distributed environment. """
@@ -320,6 +325,7 @@ def init_processes(rank, size, fn, backend='gloo'):
     os.environ['MASTER_PORT'] = '29500'
     dist.init_process_group(backend, rank=rank, world_size=size)
     fn(rank, size)
+
 
 def onehot_from_logits(logits, eps=0.0):
     """
@@ -337,17 +343,20 @@ def onehot_from_logits(logits, eps=0.0):
     return torch.stack([argmax_acs[i] if r > eps else rand_acs[i] for i, r in
                         enumerate(torch.rand(logits.shape[0]))])
 
+
 # modified for PyTorch from https://github.com/ericjang/gumbel-softmax/blob/master/Categorical%20VAE.ipynb
 def sample_gumbel(shape, eps=1e-20, tens_type=torch.FloatTensor):
     """Sample from Gumbel(0, 1)"""
     U = Variable(tens_type(*shape).uniform_(), requires_grad=False)
     return -torch.log(-torch.log(U + eps) + eps)
 
+
 # modified for PyTorch from https://github.com/ericjang/gumbel-softmax/blob/master/Categorical%20VAE.ipynb
 def gumbel_softmax_sample(logits, temperature):
     """ Draw a sample from the Gumbel-Softmax distribution"""
     y = logits + sample_gumbel(logits.shape, tens_type=type(logits.data))
     return F.softmax(y / temperature, dim=1)
+
 
 # modified for PyTorch from https://github.com/ericjang/gumbel-softmax/blob/master/Categorical%20VAE.ipynb
 def gumbel_softmax(logits, temperature=1.0, hard=False):

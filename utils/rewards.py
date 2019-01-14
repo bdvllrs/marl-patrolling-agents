@@ -57,36 +57,30 @@ def full_reward(agents, t):
     """
     rewards = []
     num_officers, num_targets = 0, 0
-    officer_won = False
     for agent in agents:
         if agent.type == "target":
             num_targets += 1
-            num_officers_around = len(distance_enemies_around(agent, agents, max_distance=1))
-            if num_officers_around >= 2:
-                officer_won = True
         if agent.type == 'officer':
             num_officers += 1
     for agent in agents:
-        if agent.type == "officer" and officer_won:
-            rewards.append(100)
+        new_x, new_y = agent.position
+        if new_x >= agent.limit_board[0] or new_y >= agent.limit_board[1] or new_x < 0 or new_y < 0:
+            rewards.append(-100)
         else:
-            new_x, new_y = agent.position
-            if new_x >= agent.limit_board[0] or new_y >= agent.limit_board[1] or new_x < 0 or new_y < 0:
+            num_ennemies_around = len(distance_enemies_around(agent, agents, max_distance=1))
+            if agent.type == "officer" and num_ennemies_around >= 1:
+                rewards.append(50)
+            elif agent.type == "target" and num_ennemies_around >= 1:
                 rewards.append(-50)
             else:
                 distances = distance_enemies_around(agent, agents)
                 if agent.type == "target":
-                    if len(distances) == 0:
-                        reward = agent.view_radius * num_officers
-                    else:
-                        reward = sum(distances)
+                    reward = 0.01 * sum(distances)
                 else:
-                    if len(distances) == 0:
-                        reward = 0
-                    else:
-                        reward = agent.view_radius * num_targets - sum(distances)
+                    reward = 0.01 * (agent.view_radius * num_targets - sum(distances))
                 # reward /= 2 ** t
                 rewards.append(reward)
+            rewards[-1] += (25 - t) / 10  # give an incentive to finish fast
     return rewards
 
 

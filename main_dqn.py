@@ -11,9 +11,9 @@ plt.show()
 
 
 
-number_officers = 1
+number_officers = 3
 reward_type = "full"
-width = height = 10
+width = height = 15
 env = sim.Env(width=width, height=height, reward_type=reward_type)
 n_epochs = 50000
 n_episodes = 30
@@ -30,7 +30,7 @@ k_spawn = 0
 plot_loss = []
 
 officers = [sim.Officer("Officer " + str(k)) for k in range(number_officers)]
-target = sim.Target()  # One target
+target = sim.Target("Target")  # One target
 
 x_target, y_target = np.random.randint(0, width), np.random.randint(0, height)
 env.add_agent(target, (x_target, y_target))

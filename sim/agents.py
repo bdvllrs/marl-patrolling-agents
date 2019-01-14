@@ -8,10 +8,9 @@ import torch
 
 __all__ = ["Officer", "Target", "Headquarters"]
 # if gpu is to be used
-#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = "cpu"
-print(device)
-
+# print(device)
 
 class Agent:
     type_id = None
@@ -21,7 +20,7 @@ class Agent:
     last_action = None
     color = "red"
     limit_board = None
-    view_radius = 5  # manhattan distance
+    view_radius = 15  # manhattan distance
     max_size_history = 1000
     can_learn = False
 
@@ -74,18 +73,17 @@ class Agent:
         """
         if self.view_area_memoize is not None:
             return self.view_area_memoize
-        if self.view_radius >= self.limit_board[0]:
-            self.view_area_memoize = [(x, y) for x in range(self.limit_board[0]) for y in range(self.limit_board[1])]
-            return self.view_area_memoize
-        position = self.position if position is None else position
-        positions = [position]
-        x, y = position
-        for i in range(-self.view_radius, self.view_radius + 1):
-            for j in range(-self.view_radius, self.view_radius + 1):
-                if 0 <= x - i < self.limit_board[0] and 0 <= y - j < self.limit_board[1]:
-                    positions.append((x - i, y - j))
-        # self.view_area_from(position, self.view_radius, positions)
-        return positions
+        self.view_area_memoize = [(x, y) for x in range(self.limit_board[0]) for y in range(self.limit_board[1])]
+        return self.view_area_memoize
+        # position = self.position if position is None else position
+        # positions = [position]
+        # x, y = position
+        # for i in range(-self.view_radius, self.view_radius + 1):
+        #     for j in range(-self.view_radius, self.view_radius + 1):
+        #         if 0 <= x - i < self.limit_board[0] and 0 <= y - j < self.limit_board[1]:
+        #             positions.append((x - i, y - j))
+        # # self.view_area_from(position, self.view_radius, positions)
+        # return positions
 
     def view_area_from(self, position, hops, positions):
         """
@@ -162,15 +160,6 @@ class RLAgent(Agent):
         else:
             return None
 
-
-class Officer(RLAgent):
-    """
-    No MARL for this one. Each of them learns individually
-    """
-    type_id = 0
-    type = "officer"
-    color = "blue"
-
     def draw_action(self, obs):
         """
         Select the action to perform
@@ -188,6 +177,15 @@ class Officer(RLAgent):
             return choice(actions_possible)
 
 
+class Officer(RLAgent):
+    """
+    No MARL for this one. Each of them learns individually
+    """
+    type_id = 0
+    type = "officer"
+    color = "blue"
+
+
 class Headquarters(Agent):
     """
     MARL - represents several Officers
@@ -197,28 +195,28 @@ class Headquarters(Agent):
     color = "black"
 
 
-class Target(Agent):
+class Target(RLAgent):
     type_id = 1
     type = "target"
 
-    def distance_to_officers(self, obs, direction=None):
-        position = self.position if direction is None else position_from_direction(self.position, direction)
-        sum_dist = np.inf
-        for agent in obs:
-            if agent.type == 'officer':
-                if sum_dist == np.inf:
-                    sum_dist = 0
-                sum_dist += get_distance_between(self.limit_board, position, agent.position)
-        return sum_dist
-
-    def draw_action(self, obs):
-        """
-        Choose the position as far away from patrol
-        Args:
-            obs: information on where are the other agents. List of agents.
-        """
-        if self.distance_to_officers(obs) == np.inf:
-            return 'none'
-        directions = possible_directions(self.limit_board, self.position)
-        chosen_direction = max(directions, key=lambda direction: self.distance_to_officers(obs, direction))
-        return chosen_direction
+    # def distance_to_officers(self, obs, direction=None):
+    #     position = self.position if direction is None else position_from_direction(self.position, direction)
+    #     sum_dist = np.inf
+    #     for agent in obs:
+    #         if agent.type == 'officer':
+    #             if sum_dist == np.inf:
+    #                 sum_dist = 0
+    #             sum_dist += get_distance_between(self.limit_board, position, agent.position)
+    #     return sum_dist
+    #
+    # def draw_action(self, obs):
+    #     """
+    #     Choose the position as far away from patrol
+    #     Args:
+    #         obs: information on where are the other agents. List of agents.
+    #     """
+    #     if self.distance_to_officers(obs) == np.inf:
+    #         return 'none'
+    #     directions = possible_directions(self.limit_board, self.position)
+    #     chosen_direction = max(directions, key=lambda direction: self.distance_to_officers(obs, direction))
+    #     return chosen_direction
