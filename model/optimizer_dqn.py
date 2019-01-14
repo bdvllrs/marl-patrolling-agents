@@ -22,7 +22,8 @@ def optimize_model(env, batch_size, episode):
                                                     batch["next_states"])), device=device, dtype=torch.uint8)
             h = env.height
             BNS = [s for s in batch["next_states"] if s is not None]
-            non_final_next_states = torch.FloatTensor(BNS, device=device).reshape(len(BNS), h, h)
+            # non_final_next_states = torch.FloatTensor(BNS, device=device).reshape(len(BNS), h, h)
+            non_final_next_states = torch.FloatTensor(BNS, device=device)
 
             state_batch = torch.FloatTensor(batch["states"], device=device)
             action_batch = torch.FloatTensor(batch["actions"], device=device).max(1)[1].unsqueeze(1)
@@ -30,7 +31,8 @@ def optimize_model(env, batch_size, episode):
             # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
             # columns of actions taken. These are the actions which would've been taken
             # for each batch state according to policy_net
-            state_batch = state_batch.reshape(batch_size, h, h).to(device)
+            # state_batch = state_batch.reshape(batch_size, h, h).to(device)
+            state_batch = state_batch.to(device)
             state_action_values = agent.policy_net(state_batch).gather(1, action_batch.long().to(device))
             # Compute V(s_{t+1}) for all next states.
             # Expected values of actions for non_final_next_states are computed based

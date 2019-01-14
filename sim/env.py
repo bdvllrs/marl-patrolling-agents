@@ -76,15 +76,12 @@ class Env:
         actions = []
         positions = []
         for agent in self.agents:
-            obs = []
             for other_agent in self.agents:
-                if other_agent.position in agent.view_area():
-                    obs.append(other_agent)
                 if agent.type == 'target' and other_agent.type == 'officer':
                     num_officers_around = len(distance_enemies_around(agent, self.agents, max_distance=1))
                     if num_officers_around >= 2:
                         terminal_state = True
-            action = agent.draw_action(obs)
+            action = agent.draw_action(self.agents)
             actions.append(action)
             if np.random.rand() < self.noise:
                 # We select a position at random and not the one selected
@@ -95,7 +92,7 @@ class Env:
             #     terminal_state = True
             agent.set_position(next_position)
             positions.append(agent.position)
-            agent.add_to_history(action, obs)
+            agent.add_to_history(action, self.agents)
 
         terminal_state, self.has_finished = self.has_finished, terminal_state
 

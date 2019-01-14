@@ -129,16 +129,15 @@ class Agent:
 class RLAgent(Agent):
     can_learn = True
 
-    def __init__(self, name, view_radius=15, gamma=0.9):
+    def __init__(self, name, n_agents, gamma=0.9):
         super(RLAgent, self).__init__(name)
-        self.view_radius = view_radius
         self.gamma = gamma
         self.EPS_START = 0.9
         self.EPS_END = 0.4
         self.EPS_DECAY = 500000
         self.steps_done = 0
-        self.policy_net = DQN(view_radius).to(device)
-        self.target_net = DQN(view_radius).to(device)
+        self.policy_net = DQN(n_agents).to(device)
+        self.target_net = DQN(n_agents).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.001)
@@ -153,8 +152,8 @@ class RLAgent(Agent):
         self.steps_done += 1
 
         state = torch.from_numpy(state).float().to(device).unsqueeze(0)
-        h = state.shape[-1]
-        state = state.reshape(1, h, h)
+        # h = state.shape[-1]
+        # state = state.reshape(1, h, h)
 
         if sample > eps_threshold:
             with torch.no_grad():

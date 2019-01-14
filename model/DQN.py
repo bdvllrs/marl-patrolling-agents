@@ -8,9 +8,9 @@ import torchvision.transforms as T
 
 class DQN(nn.Module):
 
-    def __init__(self, h):
+    def __init__(self, n_agents):
         super(DQN, self).__init__()
-        self.linear_input_size = h
+        self.n_agents = n_agents
 
         # self.head = nn.Linear(self.linear_input_size, 100)  # 448 or 512
         # self.head2 = nn.Linear(100, 9)  # 448 or 512
@@ -27,7 +27,7 @@ class DQN(nn.Module):
         #     nn.ReLU()
         # )
         self.fc = nn.Sequential(
-            nn.Linear(self.linear_input_size * self.linear_input_size, 100),
+            nn.Linear(self.n_agents * self.n_agents * 2, 100),
             nn.ReLU(),
             nn.Linear(100, 5),
             nn.Softmax(dim=1)
