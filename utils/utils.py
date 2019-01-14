@@ -202,15 +202,15 @@ def sample_batch_history(agent, batch_size, memory=10000):
         "top": [0, 1, 0, 0, 0, 0, 0, 0, 0],
         "bottom": [0, 0, 1, 0, 0, 0, 0, 0, 0],
         "left": [0, 0, 0, 1, 0, 0, 0, 0, 0],
-        "right": [0, 0, 0, 0, 1, 0, 0, 0, 0],
-        "top-right": [0, 0, 0, 0, 0, 1, 0, 0, 0],
-        "bottom-right": [0, 0, 0, 0, 0, 0, 1, 0, 0],
-        "top-left": [0, 0, 0, 0, 0, 0, 0, 1, 0],
-        "bottom-left": [0, 0, 0, 0, 0, 0, 0, 0, 1],
+        "right": [0, 0, 0, 0, 1, 0, 0, 0, 0]
+        #"top-right": [0, 0, 0, 0, 0, 1, 0, 0, 0],
+        #"bottom-right": [0, 0, 0, 0, 0, 0, 1, 0, 0],
+        #"top-left": [0, 0, 0, 0, 0, 0, 0, 1, 0],
+        #"bottom-left": [0, 0, 0, 0, 0, 0, 0, 0, 1],
     }
     # remove first position and keep only memory elements
     history = list(filter(lambda x: "prev_state" in x.keys(), agent.histories))[-memory:]
-    if len(history) >= batch_size:
+    if len(history) >= 10*batch_size:
         batch = random.sample(history, batch_size)
         # Transforms into a convenient form
         return {

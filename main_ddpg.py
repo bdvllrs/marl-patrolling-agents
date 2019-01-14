@@ -1,10 +1,7 @@
-from tensorboardX import SummaryWriter
-from torch.autograd import Variable
-import os
 from pathlib import Path
+
 import sim
-from model.Buffer import ReplayBuffer
-from model.optimizer_ddpg import *
+from model.optimizer_dqn import optimize_model
 import time
 import numpy as np
 from utils.utils import draw_result, random_position_around_point
@@ -14,57 +11,29 @@ import matplotlib.pyplot as plt
 
 plt.show()
 
-number_officers = 3
+
+
+number_officers = 2
 reward_type = "full"
-width = height = 100
+width = height = 15
 env = sim.Env(width=width, height=height, reward_type=reward_type)
 n_epochs = 50000
-n_episodes = 10
-n_learning = 10
-batch_size = 1024
+n_episodes = 30
+n_learning = 25
+batch_size = 128
 plot_episode_every = 100
-final_noise_scale = 0.0
-init_noise_scale = 0.1
-buffer_length = 100
+
 env.max_length_episode = 50  # time to go across the board and do a pursuit
 print_every = 10
 increase_spawn_circle_every = [1]
 spawn_distance = [10]
 spawn_index = 0
 k_spawn = 0
-n_rollout_threads = 1
 plot_loss = []
-USE_CUDA = True
-steps_per_update = 100
-save_interval = 1000
-env_id = "test_compile"
-model_name = "DDPG"
 
-model_dir = Path('./models') / env_id / model_name
-if not model_dir.exists():
-    curr_run = 'run1'
-else:
-    exst_run_nums = [int(str(folder.name).split('run')[1]) for folder in
-                     model_dir.iterdir() if
-                     str(folder.name).startswith('run')]
-    if len(exst_run_nums) == 0:
-        curr_run = 'run1'
-    else:
-        curr_run = 'run%i' % (max(exst_run_nums) + 1)
-run_dir = model_dir / curr_run
-log_dir = run_dir / 'logs'
-
-
-logger = SummaryWriter(str(log_dir))
-
-ddpg = Trainer.init_from_env(env)
-
-replay_buffer = ReplayBuffer(buffer_length, ddpg.nagents,
-                                 [obsp.shape[0] for obsp in env.observation_space],
-                                 [acsp.n for acsp in env.action_space])
-
-officers = [sim.Officer("Officer " + str(k)) for k in range(number_officers)]
+officers = [sim.DDPG_agent("Officer " + str(k)) for k in range(number_officers)]
 target = sim.Target()  # One target
+
 
 x_target, y_target = np.random.randint(0, width), np.random.randint(0, height)
 env.add_agent(target, (x_target, y_target))
@@ -83,14 +52,20 @@ start = time.time()
 
 t = 0
 
+
+
+
 for epoch in range(n_epochs):
     for episode in range(1, n_episodes + 1):
         states = env.reset()
 
         explr_pct_remaining = max(0, n_episodes - episode) / n_episodes
-        ddpg.scale_noise(
-            final_noise_scale + (init_noise_scale - final_noise_scale) * explr_pct_remaining)
-        ddpg.reset_noise()
+
+        for officer in officers:
+            officer.policy.eval()
+            officer.scale_noise(
+                0.0 + (0.3 - 0.0) * explr_pct_remaining)
+            ddpg.reset_noise()
 
 
         # Draw the board

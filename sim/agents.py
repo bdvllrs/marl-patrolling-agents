@@ -2,11 +2,15 @@ import random
 import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import choice, possible_directions, position_from_direction, get_distance_between, state_from_observation
+from torch.optim import Adam
+
+from model.DDPG import MLPNetwork
+from utils import choice, possible_directions, position_from_direction, get_distance_between, state_from_observation, \
+    hard_update
 from model import DQN
 import torch
 
-__all__ = ["Officer", "Target", "Headquarters"]
+__all__ = ["Officer", "Target", "Headquarters", "DDPG_agent", "RLAgent", "RLAgent"]
 # if gpu is to be used
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = "cpu"
@@ -22,7 +26,7 @@ class Agent:
     color = "red"
     limit_board = None
     view_radius = 5  # manhattan distance
-    max_size_history = 1000
+    max_size_history = 10000
     can_learn = False
 
     def __init__(self, name=None):
@@ -163,7 +167,89 @@ class RLAgent(Agent):
             return None
 
 
+class RLAgent_ddpg(Agent):
+    can_learn = True
+
+    def __init__(self, name, view_radius=10, gamma=0.9):
+        super(RLAgent_ddpg, self).__init__(name)
+        self.view_radius = view_radius
+        self.gamma = gamma
+        self.EPS_START = 0.9
+        self.EPS_END = 0.4
+        self.EPS_DECAY = 500000
+        self.steps_done = 0
+        lr = 0.001
+        self.policy = MLPNetwork(64, 9,
+                                 hidden_dim=64,
+                                 constrain_out=True,
+                                 discrete_action=True)
+        self.critic = MLPNetwork(138, 1,
+                                 hidden_dim=64,
+                                 constrain_out=False)
+        self.target_policy = MLPNetwork(64, 9,
+                                        hidden_dim=64,
+                                        constrain_out=True,
+                                        discrete_action=True)
+        self.target_critic = MLPNetwork(138, 1,
+                                        hidden_dim=64,
+                                        constrain_out=False)
+
+        hard_update(self.target_policy, self.policy)
+        hard_update(self.target_critic, self.critic)
+        self.policy_optimizer = Adam(self.policy.parameters(), lr=lr)
+
+        self.critic_optimizer = Adam(self.critic.parameters(), lr=lr)
+
+        self.exploration = 0.3
+
+
+
+    # Exploration policy (epsilon greedy)
+    def select_action(self, state):
+        sample = random.random()
+        eps_threshold = (self.EPS_END + (self.EPS_START - self.EPS_END) *
+                         np.math.exp(-1. * self.steps_done / self.EPS_DECAY))
+        self.steps_done += 1
+
+        state = torch.from_numpy(state).float().to(device).unsqueeze(0)
+        h = state.shape[-1]
+        state = state.reshape(1, h, h)
+
+        if sample > eps_threshold:
+            with torch.no_grad():
+                # t.max(1) will return largest value for column of each row.
+                # second column on max result is index of where max element was
+                # found, so we pick action with the larger expected reward.
+                return self.policy_net(state).max(1)[1]  # .view(1, 1)
+        else:
+            return None
+
+
 class Officer(RLAgent):
+    """
+    No MARL for this one. Each of them learns individually
+    """
+    type_id = 0
+    type = "officer"
+    color = "blue"
+
+    def draw_action(self, obs):
+        """
+        Select the action to perform
+        Args:
+            obs: information on where are the other agents. List of agents.
+        """
+        state = state_from_observation(self, self.position, obs)
+        action = self.select_action(state)
+        actions_possible = ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
+                            'bottom-left']
+        if action is not None:
+            index = action.item()
+            return actions_possible[index]
+        else:
+            return choice(actions_possible)
+
+class DDPG_agent(RLAgent_ddpg):
     """
     No MARL for this one. Each of them learns individually
     """

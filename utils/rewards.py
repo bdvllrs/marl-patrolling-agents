@@ -57,17 +57,13 @@ def full_reward(agents, t):
     """
     rewards = []
     num_officers, num_targets = 0, 0
-    officer_won = False
     for agent in agents:
         if agent.type == "target":
             num_targets += 1
-            num_officers_around = len(distance_enemies_around(agent, agents, max_distance=1))
-            if num_officers_around >= 2:
-                officer_won = True
         if agent.type == 'officer':
             num_officers += 1
     for agent in agents:
-        if agent.type == "officer" and officer_won:
+        if agent.type == "officer" and len(distance_enemies_around(agent, agents, max_distance=1)) > 0:
             rewards.append(100)
         else:
             new_x, new_y = agent.position
@@ -84,7 +80,7 @@ def full_reward(agents, t):
                     if len(distances) == 0:
                         reward = 0
                     else:
-                        reward = agent.view_radius * num_targets - sum(distances)
+                        reward = 0.001*(agent.view_radius * num_targets - sum(distances))
                 # reward /= 2 ** t
                 rewards.append(reward)
     return rewards
