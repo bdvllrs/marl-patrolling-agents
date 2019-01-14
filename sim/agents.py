@@ -144,26 +144,17 @@ class RLAgent(Agent):
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.001)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
+        self.eps_greedy = 0.5
+        self.n_actions = 5
 
     # Exploration policy (epsilon greedy)
     def select_action(self, state):
-        sample = random.random()
-        eps_threshold = (self.EPS_END + (self.EPS_START - self.EPS_END) *
-                         np.math.exp(-1. * self.steps_done / self.EPS_DECAY))
-        self.steps_done += 1
-
-        state = torch.from_numpy(state).float().to(device).unsqueeze(0)
-        h = state.shape[-1]
-        state = state.reshape(1, h, h)
-
-        if sample > eps_threshold:
-            with torch.no_grad():
-                # t.max(1) will return largest value for column of each row.
-                # second column on max result is index of where max element was
-                # found, so we pick action with the larger expected reward.
-                return self.policy_net(state).max(1)[1]  # .view(1, 1)
+        p = np.random.random()
+        if p < self.eps_greedy:
+            action_probs = self.policy_net(state[np.newaxis, :])
+            return np.argmax(action_probs[0])
         else:
-            return None
+            return random.randrange(self.n_actions)
 
     def draw_action(self, obs):
         """

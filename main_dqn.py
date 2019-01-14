@@ -48,8 +48,8 @@ meter = {
 start = time.time()
 
 for epoch in range(n_epochs):
+    states = env.reset()
     for episode in range(1, n_episodes + 1):
-        states = env.reset()
         # Draw the board
         if not epoch % plot_episode_every and episode == 1:
             env.draw_board()
@@ -80,8 +80,7 @@ for epoch in range(n_epochs):
     k_spawn += 1
 
     # Learning step
-    for k in range(n_learning):
-        optimize_model(env, batch_size, epoch)
+    optimize_model(env, batch_size, epoch, n_learning)
 
     if epoch % print_every == 0:
         print("Episode Num ", epoch)
