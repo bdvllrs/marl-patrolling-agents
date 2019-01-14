@@ -9,30 +9,14 @@ device ="cpu"
 print(device)
 
 
-def optimize_model(env, batch_size, episode, n_learning, states):
-    for k in range(n_learning):
-        #step+=1
-        actions = []
-        actions_onehot = []
-        for agent, idx in enumerate(env.agents):
-            if agent.can_learn:
-
-                action = agent.select_action(states[i])
-                speed = 0.9 if env.agents[i].adversary else 1
-
-                onehot_action = np.zeros(n_actions[i])
-                onehot_action[action] = speed
-                actions_onehot.append(onehot_action)
-                actions.append(action)
-
-                batch = sample_batch_history(agent, batch_size)
-
-
-
-
-                if batch is None:
-                    # Not enough data in histories
-                    return
+def optimize_model(env, batch_size, episode):
+    replace_target_freq = 5
+    for agent in env.agents:
+        if agent.can_learn:
+            batch = sample_batch_history(agent, batch_size)
+            if batch is None:
+                # Not enough data in histories
+                return
 
             non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                                     batch["next_states"])), device=device, dtype=torch.uint8)
@@ -71,5 +55,5 @@ def optimize_model(env, batch_size, episode, n_learning, states):
                 param.grad.data.clamp_(-1, 1)
             agent.optimizer.step()
 
-            if episode % 20 == 0:
+            if episode % replace_target_freq == 0:
                 agent.target_net.load_state_dict(agent.policy_net.state_dict())

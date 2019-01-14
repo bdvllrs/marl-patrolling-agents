@@ -58,6 +58,7 @@ for epoch in range(n_epochs):
         # Do an episode
         while not terminal:
             states, actions, rewards, terminal = env.step()
+            optimize_model(env, batch_size, epoch)
             all_rewards.append(rewards)
             if not epoch % plot_episode_every and episode == 1:
                 env.draw_board()
@@ -80,7 +81,7 @@ for epoch in range(n_epochs):
     k_spawn += 1
 
     # Learning step
-    optimize_model(env, batch_size, epoch, n_learning)
+
 
     if epoch % print_every == 0:
         print("Episode Num ", epoch)
