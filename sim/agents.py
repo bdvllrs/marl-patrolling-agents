@@ -129,7 +129,7 @@ class Agent:
 class RLAgent(Agent):
     can_learn = True
 
-    def __init__(self, name, view_radius=10, gamma=0.9):
+    def __init__(self, name, view_radius=15, gamma=0.9):
         super(RLAgent, self).__init__(name)
         self.view_radius = view_radius
         self.gamma = gamma
