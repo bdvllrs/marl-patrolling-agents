@@ -143,8 +143,19 @@ class RLAgent(Agent):
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.001)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
+        self.eps_greedy = 0.5
+        self.n_actions = 5
 
     # Exploration policy (epsilon greedy)
+    def choose_action(self, state):
+        p = np.random.random()
+        if p < self.eps_greedy:
+            action_probs = self.policy_net(state).max(1)[1]
+            return np.argmax(action_probs[0])
+        else:
+            return random.randrange(self.n_actions)
+
+        # Exploration policy (epsilon greedy)
     def select_action(self, state):
         sample = random.random()
         eps_threshold = (self.EPS_END + (self.EPS_START - self.EPS_END) *

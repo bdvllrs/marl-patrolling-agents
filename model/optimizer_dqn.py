@@ -10,10 +10,10 @@ print(device)
 
 
 def optimize_model(env, batch_size, episode):
+    replace_target_freq = 5
     for agent in env.agents:
         if agent.can_learn:
             batch = sample_batch_history(agent, batch_size)
-
             if batch is None:
                 # Not enough data in histories
                 return
@@ -55,5 +55,5 @@ def optimize_model(env, batch_size, episode):
                 param.grad.data.clamp_(-1, 1)
             agent.optimizer.step()
 
-            if episode % 20 == 0:
+            if episode % replace_target_freq == 0:
                 agent.target_net.load_state_dict(agent.policy_net.state_dict())
