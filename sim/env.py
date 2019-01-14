@@ -13,7 +13,7 @@ class Env:
 
     agent_radius = 1
     noise = 0.01
-    max_length_episode = 50
+    max_length_episode = 30
     current_iter = 0
 
     def __init__(self, width, height, reward_type='full'):
@@ -75,13 +75,14 @@ class Env:
         terminal_state = False if self.max_length_episode is None else self.current_iter >= self.max_length_episode
         actions = []
         positions = []
-        for agent in self.agents:
-            for other_agent in self.agents:
+        observations = self.agents[:]
+        for agent in observations:
+            for other_agent in observations:
                 if agent.type == 'target' and other_agent.type == 'officer':
-                    num_officers_around = len(distance_enemies_around(agent, self.agents, max_distance=1))
+                    num_officers_around = len(distance_enemies_around(agent, observations, max_distance=1))
                     if num_officers_around >= 2:
                         terminal_state = True
-            action = agent.draw_action(self.agents)
+            action = agent.draw_action(observations)
             actions.append(action)
             if np.random.rand() < self.noise:
                 # We select a position at random and not the one selected
@@ -92,7 +93,7 @@ class Env:
             #     terminal_state = True
             agent.set_position(next_position)
             positions.append(agent.position)
-            agent.add_to_history(action, self.agents)
+            agent.add_to_history(action, observations)
 
         terminal_state, self.has_finished = self.has_finished, terminal_state
 
