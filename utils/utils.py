@@ -49,18 +49,10 @@ def possible_directions(limit_board, position):
     possible_direction = ['none']
     if x > 0:
         possible_direction.append('left')
-        if y > 0:
-            possible_direction.append('bottom-left')
-        if y < lim_y - 1:
-            possible_direction.append('top-left')
     if y > 0:
         possible_direction.append('bottom')
     if x < lim_x - 1:
         possible_direction.append('right')
-        if y > 0:
-            possible_direction.append('bottom-right')
-        if y < lim_y - 1:
-            possible_direction.append('top-right')
     if y < lim_y - 1:
         possible_direction.append('top')
     return possible_direction
@@ -74,8 +66,7 @@ def position_from_direction(current_position, direction):
         direction: one of the 8 possible directions (none, top, left, ...)
     Returns: couple of position (x_new, y_new)
     """
-    assert direction in ['none', 'top', 'left', 'right', 'bottom', 'top-left', 'top-right', 'bottom-right',
-                         'bottom-left'], "The direction is unknown."
+    assert direction in ['none', 'top', 'left', 'right', 'bottom'], "The direction is unknown."
     x, y = current_position
     if direction == 'top':
         return x, y + 1
@@ -85,14 +76,6 @@ def position_from_direction(current_position, direction):
         return x - 1, y
     elif direction == 'right':
         return x + 1, y
-    elif direction == 'top-left':
-        return x - 1, y + 1
-    elif direction == 'top-right':
-        return x + 1, y + 1
-    elif direction == 'bottom-left':
-        return x - 1, y - 1
-    elif direction == 'bottom-right':
-        return x + 1, y - 1
     else:  # none
         return x, y
 
@@ -204,15 +187,15 @@ def sample_batch_history(agent, batch_size, memory=10000):
         "top": [0, 1, 0, 0, 0, 0, 0, 0, 0],
         "bottom": [0, 0, 1, 0, 0, 0, 0, 0, 0],
         "left": [0, 0, 0, 1, 0, 0, 0, 0, 0],
-        "right": [0, 0, 0, 0, 1, 0, 0, 0, 0],
-        "top-right": [0, 0, 0, 0, 0, 1, 0, 0, 0],
-        "bottom-right": [0, 0, 0, 0, 0, 0, 1, 0, 0],
-        "top-left": [0, 0, 0, 0, 0, 0, 0, 1, 0],
-        "bottom-left": [0, 0, 0, 0, 0, 0, 0, 0, 1],
+        "right": [0, 0, 0, 0, 1, 0, 0, 0, 0]
+        # "top-right": [0, 0, 0, 0, 0, 1, 0, 0, 0],
+        # "bottom-right": [0, 0, 0, 0, 0, 0, 1, 0, 0],
+        # "top-left": [0, 0, 0, 0, 0, 0, 0, 1, 0],
+        # "bottom-left": [0, 0, 0, 0, 0, 0, 0, 0, 1],
     }
     # remove first position and keep only memory elements
     history = list(filter(lambda x: "prev_state" in x.keys(), agent.histories))[-memory:]
-    if len(history) >= batch_size:
+    if len(history) >= 10*batch_size:
         batch = random.sample(history, batch_size)
         # Transforms into a convenient form
         return {

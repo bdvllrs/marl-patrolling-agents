@@ -17,7 +17,7 @@ width = height = 15
 env = sim.Env(width=width, height=height, reward_type=reward_type)
 n_epochs = 50000
 n_episodes = 30
-n_learning = 10
+n_learning = 25
 batch_size = 128
 plot_episode_every = 100
 

@@ -7,7 +7,6 @@ import torch.nn.functional as F
 import numpy as np
 
 
-
 # from https://github.com/songrotek/DDPG/blob/master/ou_noise.py
 class OUNoise:
     def __init__(self, action_dimension, scale=0.1, mu=0, theta=0.15, sigma=0.2):
@@ -33,6 +32,7 @@ class MLPNetwork(nn.Module):
     """
     MLP network (can be used as value or policy)
     """
+
     def __init__(self, input_dim, out_dim, hidden_dim=64, nonlin=F.relu,
                  constrain_out=False, norm_in=True, discrete_action=True):
         """
@@ -74,13 +74,12 @@ class MLPNetwork(nn.Module):
         return out
 
 
-
-
 class DDPGAgent(object):
     """
     General class for DDPG agents (policy, critic, target policy, target
     critic, exploration noise)
     """
+
     def __init__(self, num_in_pol, num_out_pol, num_in_critic, hidden_dim=64,
                  lr=0.01, discrete_action=True):
         """
