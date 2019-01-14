@@ -140,7 +140,7 @@ def distance_enemies_around(agent, agents, max_distance=None):
     return enemies_around
 
 
-def state_from_observation(agent, position, observation):
+def state_from_observation(agent, position, agents):
     """
     Get state board from observation.
     It is a board of the field of view of the agent where:
@@ -150,24 +150,30 @@ def state_from_observation(agent, position, observation):
     Args:
         position: position of the agent
         agent: Agent receiving the observation
-        observation:
+        agents:
     Returns: array of shape (2 * agent.view_radius + 1, 2 * agent.view_radius + 1)
     """
     side_length = agent.limit_board
     # Defaults to zero (not accessible)
-    board = [[0 for i in range(side_length[0])] for j in range(side_length[1])]
-    x_a, y_a = position
-    # Set to zero every position in field of view
-    for obs in observation:
-        x, y = obs.position
-        if 0 <= x < side_length[0] and 0 <= y < side_length[1]:
-            if obs.type == agent.type:
-                board[y][x] = 0.5
-            else:
-                board[y][x] = 1
-    if 0 <= x_a < side_length[0] and 0 <= y_a < side_length[1]:
-        board[y_a][x_a] = -1
-    return np.array(board)
+    # board = [[0 for i in range(side_length[0])] for j in range(side_length[1])]
+    # x_a, y_a = position
+    # # Set to zero every position in field of view
+    # for obs in observation:
+    #     x, y = obs.position
+    #     if 0 <= x < side_length[0] and 0 <= y < side_length[1]:
+    #         if obs.type == agent.type:
+    #             board[y][x] = 0.5
+    #         else:
+    #             board[y][x] = 1
+    # if 0 <= x_a < side_length[0] and 0 <= y_a < side_length[1]:
+    #     board[y_a][x_a] = -1
+    # return np.array(board)
+    state = [[0 for k in range(2 * len(agents))] for i in range(len(agents))]
+    for k, agent in enumerate(agents):
+        for i, other_agent in enumerate(agents):
+            state[k][2*i] = other_agent.position[0] / 15
+            state[k][2*i + 1] = other_agent.position[1] / 15
+    return np.array(state)
 
 
 def sample_batch_history(agent, batch_size, memory=10000):

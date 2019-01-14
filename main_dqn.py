@@ -29,8 +29,8 @@ spawn_index = 0
 k_spawn = 0
 plot_loss = []
 
-officers = [sim.Officer("Officer " + str(k)) for k in range(number_officers)]
-target = sim.Target("Target")  # One target
+officers = [sim.Officer("Officer " + str(k), n_agents=number_officers+1) for k in range(number_officers)]
+target = sim.Target("Target", n_agents=number_officers+1)  # One target
 
 x_target, y_target = np.random.randint(0, width), np.random.randint(0, height)
 env.add_agent(target, (x_target, y_target))

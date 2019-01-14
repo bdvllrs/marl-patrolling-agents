@@ -76,10 +76,7 @@ def full_reward(agents, t):
                 if agent.type == "target":
                     reward = 0.01 * sum(distances)
                 else:
-                    if len(distances) == 0:
-                        reward = 0
-                    else:
-                        reward = 0.001*(agent.view_radius * num_targets - sum(distances))
+                    reward = 0.01*(-sum(distances))
                 # reward /= 2 ** t
                 rewards.append(reward)
             rewards[-1] += (25 - t) / 10  # give an incentive to finish fast
