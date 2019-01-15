@@ -35,4 +35,4 @@ learning:
   model_path: /path/to/model # path to the trained model
 
 reward:
-  coef_distance_reward: 0.001
+  coef_distance_reward: 0.1

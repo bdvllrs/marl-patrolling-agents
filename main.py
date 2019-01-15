@@ -84,13 +84,12 @@ for episode in range(config.learning.n_episodes):
     # Compute discounted return of the episode
     for k in range(len(agents)):
         reward = [all_rewards[i][k] for i in range(len(all_rewards))]
-        print(k)
-        print(reward)
         discounted_return = compute_discounted_return(config.agents.gamma, reward)
         metrics[k].add_return(discounted_return)
 
     # Plot learning curves
     if not episode % config.learning.plot_curves_every:
+        print("Episode", episode)
         ax_losses.cla()
         ax_returns.cla()
         for k in range(len(agents)):
