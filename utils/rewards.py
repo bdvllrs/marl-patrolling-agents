@@ -65,22 +65,22 @@ def full_reward(agents, t):
     for agent in agents:
         new_x, new_y = agent.position
         if new_x >= agent.limit_board[0] or new_y >= agent.limit_board[1] or new_x < 0 or new_y < 0:
-            rewards.append(-100)
+            rewards.append(-50)
         else:
             num_ennemies_around = len(distance_enemies_around(agent, agents, max_distance=1))
             if agent.type == "officer" and num_ennemies_around >= 1:
-                rewards.append(50)
+                rewards.append(100)
             elif agent.type == "target" and num_ennemies_around >= 1:
                 rewards.append(-50)
             else:
                 distances = distance_enemies_around(agent, agents)
                 if agent.type == "target":
-                    reward = 0.01 * sum(distances)
+                    reward = 0.1 * sum(distances)
                 else:
-                    reward = -0.001 * sum(distances)
+                    reward = -0.1 * sum(distances)
                 # reward /= 2 ** t
                 rewards.append(reward)
-            rewards[-1] += (25 - t) / 10  # give an incentive to finish fast
+            # rewards[-1] += (25 - t) / 10  # give an incentive to finish fast
     return rewards
 
 

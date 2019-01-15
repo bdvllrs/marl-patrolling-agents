@@ -11,7 +11,7 @@ class Env:
     Environment. An agent takes 1 pixel in the board
     """
 
-    agent_radius = 1
+    agent_radius = 0.5
     noise = 0.01
     max_length_episode = 30
     current_iter = 0

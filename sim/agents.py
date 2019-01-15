@@ -26,7 +26,7 @@ class Agent:
     last_action = None
     color = "red"
     limit_board = None
-    view_radius = 5  # manhattan distance
+    view_radius = 15  # manhattan distance
     max_size_history = 10000
     can_learn = False
 
@@ -116,6 +116,7 @@ class Agent:
         x, y = self.position
         circle = plt.Circle((x, y), radius=radius, color=self.color)
         plt.gcf().gca().add_artist(circle)
+        plt.text(x, y, self.name)
 
     def draw_action(self, obs):
         """

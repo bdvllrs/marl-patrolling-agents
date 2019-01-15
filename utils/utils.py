@@ -132,8 +132,7 @@ def distance_enemies_around(agent, agents, max_distance=None):
     max_distance = agent.view_radius if max_distance is None else max_distance
     enemies_around = []
     for other_agent in agents:
-        if ((agent.type == "target" and other_agent.type == 'officer') or
-                (agent.type == "officer" and other_agent.type == 'target')):
+        if agent.type != other_agent.type:
             dist_agents = get_distance_between(agent.limit_board, agent.position, other_agent.position)
             if dist_agents <= max_distance:
                 enemies_around.append(dist_agents)
@@ -168,11 +167,10 @@ def state_from_observation(agent, position, agents):
     # if 0 <= x_a < side_length[0] and 0 <= y_a < side_length[1]:
     #     board[y_a][x_a] = -1
     # return np.array(board)
-    state = [[0 for k in range(2 * len(agents))] for i in range(len(agents))]
+    state = [0 for i in range(2*len(agents))]
     for k, agent in enumerate(agents):
-        for i, other_agent in enumerate(agents):
-            state[k][2*i] = other_agent.position[0] / 15
-            state[k][2*i + 1] = other_agent.position[1] / 15
+        state[2*k] = agent.position[0] / 15
+        state[2*k + 1] = agent.position[1] / 15
     return np.array(state)
 
 

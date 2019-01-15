@@ -27,9 +27,11 @@ class DQN(nn.Module):
         #     nn.ReLU()
         # )
         self.fc = nn.Sequential(
-            nn.Linear(self.n_agents * self.n_agents * 2, 100),
+            nn.Linear(self.n_agents * 2, 50),
             nn.ReLU(),
-            nn.Linear(100, 5),
+            nn.Linear(50, 10),
+            nn.ReLU(),
+            nn.Linear(10, 5),
             nn.Softmax(dim=1)
         )
 
