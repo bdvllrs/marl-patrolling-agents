@@ -7,4 +7,11 @@ config = Config('config/')
 agents = [AgentDQN("predator", "predator-{}".format(k), config.agents) for k in range(config.agents.number_predators)]
 agents += [AgentDQN("prey", "prey-{}".format(k), config.agents) for k in range(config.agents.number_preys)]
 
+# Definition of the memories
+for agent in agents:
+    agent.memory = ReplayMemory(config.agents.memory_size)
+
+env = Env()
+
+
 

@@ -16,6 +16,7 @@ class Agent:
         assert type in ["prey", "predator"], "Agent type is not correct."
         self.type = type
         self.id = agent_id
+        self.memory = None
 
         # For RL
         self.gamma = agent_config.gamma
