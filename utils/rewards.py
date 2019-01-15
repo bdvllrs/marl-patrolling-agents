@@ -75,9 +75,9 @@ def full_reward(agents, t):
             else:
                 distances = distance_enemies_around(agent, agents)
                 if agent.type == "target":
-                    reward = 0.1 * sum(distances)
+                    reward = 0.1 * min(distances)
                 else:
-                    reward = -0.1 * sum(distances)
+                    reward = -0.1 * min(distances)
                 # reward /= 2 ** t
                 rewards.append(reward)
             # rewards[-1] += (25 - t) / 10  # give an incentive to finish fast
