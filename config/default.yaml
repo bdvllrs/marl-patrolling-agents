@@ -6,7 +6,7 @@ agents:
   gamma: 0.9 # Discount factor.
   epsilon_greedy: 0.9 # Probability of exploration.
   lr: 0.01 # Learning rate
-  nbre_actions: 5 # Must be 5 [none, top, left, right, bottom] or 9 with corners added.
+  nombre_actions: 5 # Must be 5 [none, top, left, right, bottom] or 9 with corners added.
   update_frequency: 20 # Update the target net every...
   update_type: hard # Type of update.
 
@@ -18,6 +18,8 @@ env:
   noise: 0.001 # Agents' actions are not successful with this probability.
   reward_type: full # Must be between full and sparse.
   board_size: 15 # Size of the board
+  max_iterations: 50 # Number maximum of steps
+  plot_radius: 0.01
 
 learning:
   device: cuda # cuda or cpu

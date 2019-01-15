@@ -1,13 +1,13 @@
 import torch.nn as nn
 from utils.config import Config
 
-config = Config('./builds')
+config = Config('./config')
 
 
-class DQN_unit(nn.Module):
+class DQNUnit(nn.Module):
 
     def __init__(self):
-        super(DQN_unit, self).__init__()
+        super(DQNUnit, self).__init__()
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         self.fc = nn.Sequential(
             nn.Linear(self.n_agents * 4, self.n_agents),
