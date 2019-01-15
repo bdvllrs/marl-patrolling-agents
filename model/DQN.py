@@ -12,7 +12,7 @@ class DQNUnit(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(self.n_agents * 4, self.n_agents),
             nn.ReLU(),
-            nn.Linear(self.n_agents, config.agents.nbre_actions),
+            nn.Linear(self.n_agents, config.agents.number_actions),
             nn.Softmax(dim=1)
         )
 

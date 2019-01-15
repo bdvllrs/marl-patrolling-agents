@@ -6,7 +6,7 @@ agents:
   gamma: 0.9 # Discount factor.
   epsilon_greedy: 0.9 # Probability of exploration.
   lr: 0.01 # Learning rate
-  nombre_actions: 5 # Must be 5 [none, top, left, right, bottom] or 9 with corners added.
+  number_actions: 5 # Must be 5 [none, top, left, right, bottom] or 9 with corners added.
   update_frequency: 20 # Update the target net every...
   update_type: hard # Type of update.
 
