@@ -8,12 +8,15 @@ import torch.nn.functional as F
 device ="cpu"
 print(device)
 
+double = True
+
+
 
 def optimize_model(env, batch_size, episode):
-    replace_target_freq = 5
     for agent in env.agents:
         if agent.can_learn:
             batch = sample_batch_history(agent, batch_size)
+
             if batch is None:
                 # Not enough data in histories
                 return
@@ -33,6 +36,7 @@ def optimize_model(env, batch_size, episode):
             # for each batch state according to policy_net
             # state_batch = state_batch.reshape(batch_size, h, h).to(device)
             state_batch = state_batch.to(device)
+
             state_action_values = agent.policy_net(state_batch).gather(1, action_batch.long().to(device))
             # Compute V(s_{t+1}) for all next states.
             # Expected values of actions for non_final_next_states are computed based
@@ -40,7 +44,14 @@ def optimize_model(env, batch_size, episode):
             # This is merged based on the mask, such that we'll have either the expected
             # state value or 0 in case the state was final.
             next_state_values = torch.zeros(batch_size, device=device)
-            next_state_values[non_final_mask] = agent.target_net(non_final_next_states.to(device)).max(1)[0].detach()
+            if not double:
+                next_state_values[non_final_mask] = agent.target_net(non_final_next_states.to(device)).max(1)[0].detach()
+            else:
+                Qsa_prime_actions = agent.policy_net(non_final_next_states.to(device)).max(1)[1].detach()
+                test = agent.target_net(non_final_next_states.to(device))
+                test2=test.gather(1, Qsa_prime_actions.view(-1,1))
+                next_state_values[non_final_mask] = test2.squeeze(1)
+
             # Compute the expected Q values
             expected_state_action_values = (next_state_values.to(device) * agent.gamma) + reward_batch.to(device)
 
@@ -48,12 +59,23 @@ def optimize_model(env, batch_size, episode):
             # Compute Huber loss
             loss = F.mse_loss(state_action_values, expected_state_action_values.unsqueeze(1))
             loss.backward()
+            agent.optimizer.step()
+
+            soft_update(agent.policy_net, agent.target_net)
+
             agent.loss_values.append(loss.item())
             agent.reward_values.append(reward_batch.mean())
             # Optimize the model
-            for param in agent.policy_net.parameters():
-                param.grad.data.clamp_(-1, 1)
-            agent.optimizer.step()
 
-            if episode % replace_target_freq == 0:
-                agent.target_net.load_state_dict(agent.policy_net.state_dict())
+
+
+def soft_update(local_model, target_model, tau= 2e-3 ):
+    """
+    Params
+    ======
+        local_model (PyTorch model): weights will be copied from
+        target_model (PyTorch model): weights will be copied to
+        tau (float): interpolation parameter
+    """
+    for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
+        target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
