@@ -71,7 +71,7 @@ def full_reward(agents, t):
             if agent.type == "officer" and num_ennemies_around >= 1:
                 rewards.append(100)
             elif agent.type == "target" and num_ennemies_around >= 1:
-                rewards.append(-50)
+                rewards.append(-100)
             else:
                 distances = distance_enemies_around(agent, agents)
                 if agent.type == "target":
