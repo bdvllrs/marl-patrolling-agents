@@ -3,7 +3,7 @@ from sim.agents import Agent
 import numpy as np
 from utils.config import Config
 
-config = Config('./builds')
+config = Config('./config')
 
 
 

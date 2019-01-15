@@ -28,5 +28,11 @@ learning:
   save_folder: ./builds/
   DDQN: True
 
+  plot_episodes_every: 100
+  plot_curves_every: 100
+
+  use_model: No # If we load a trained model
+  model_path: /path/to/model # path to the trained model
+
 reward:
   coef_distance_reward: 0.001
