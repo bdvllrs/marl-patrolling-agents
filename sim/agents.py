@@ -5,6 +5,7 @@ import random
 from torch.optim import Adam
 from model.DQN import DQNUnit
 from utils.config import Config
+import torch.nn.functional as F
 
 config = Config('./config')
 
@@ -125,4 +126,27 @@ class AgentDQN(Agent):
         :param batch: for 1 agent, learn
         :return: loss
         """
-        pass
+        state_batch, next_state_batch, action_batch, reward_batch = batch
+        state_batch = torch.FloatTensor(state_batch, device = self.device)
+        next_state_batch = torch.FloatTensor(next_state_batch, device = self.device)
+        action_batch = torch.LongTensor(action_batch, device = self.device)
+        reward_batch = torch.FloatTensor(reward_batch, device = self.device)
+
+        action_by_policy = self.policy_net(state_batch).gather(1, action_batch)
+
+        if config.learning.DDQN:
+            actions_next = self.policy_net(next_state_batch).detach().max(1)[1]
+            Qsa_prime_targets = self.target_net(next_state_batch)[actions_next]
+
+        else:
+            Qsa_prime_targets = self.target_net(next_state_batch).detach().max(1)[0]
+
+
+        actions_by_cal = reward_batch  + (self.gamma * Qsa_prime_targets)
+
+        loss = F.mse_loss(action_by_policy, actions_by_cal)
+        self.policy_optimizer.zero_grad()
+        loss.backward()
+        self.policy_optimizer.step()
+
+
