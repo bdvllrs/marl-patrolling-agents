@@ -80,22 +80,33 @@ class AgentDQN(Agent):
         """
         target.load_state_dict(policy.state_dict())
 
-    def draw_action(self, observation):
+    def draw_action(self, state):
         p = np.random.random()
         if p < self.eps_greedy:
-            action_probs = self.policy_net(observation)
+            action_probs = self.policy_net(state)
             action = np.argmax(action_probs[0])
         else:
-            action = random.randrange(self.n_actions)
+            action = random.randrange(config.agents.nbre_actions)
         return action
 
     def load(self, name):
+        """
+        load models
+        :param name: adress of saved models
+        :return: models init
+        """
         params = torch.load(name)
         self.policy.load_state_dict(params['policy'])
         self.target_policy.load_state_dict(params['target_policy'])
         self.policy_optimizer.load_state_dict(params['policy_optimizer'])
 
     def save(self, name):
+        """
+        load models
+        :param name: adress of saved models
+        :return: models saved
+        :return:
+        """
         save_dict = {'policy': self.policy.state_dict(),
          'target_policy': self.target_policy.state_dict(),
          'policy_optimizer': self.policy_optimizer.state_dict()}
@@ -103,5 +114,10 @@ class AgentDQN(Agent):
 
 
     def learn(self, batch):
+        """
+
+        :param batch: for 1 agent, learn
+        :return: loss
+        """
         pass
 
