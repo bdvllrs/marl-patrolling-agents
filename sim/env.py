@@ -1,19 +1,28 @@
-from sim import reward_full
+from typing import List
+from sim.rewards import reward_full
+from sim.agents import Agent
 import random
 
 
 class Env:
+    agents: List[Agent]
+
     def __init__(self, env_config):
         self.reward_type = env_config.reward_type
         self.noise = env_config.noise
         self.board_size = env_config.board_size
 
+        self.plot_radius = env_config.plot_radius
+
         self.possible_location_values = [k / self.board_size for k in range(self.board_size)]
+
+        self.current_iteration = 0
+        self.max_iterations = env_config.max_iterations
 
         self.agents = []
         self.initial_positions = []
 
-    def add_agent(self, agent, position=None):
+    def add_agent(self, agent: Agent, position=None):
         """
         Args:
             agent:
@@ -88,6 +97,7 @@ class Env:
             concatenated with the relative position with each other agent:
             [x_i-x_1, y_i - y_1, ..., x_i - x_n, y_i - y_n].
         """
+        self.current_iteration = 0
         # Get all positions
         absolute_positions = []
         for k in range(len(self.initial_positions)):
@@ -116,9 +126,18 @@ class Env:
             positions.append(new_position[0])
             positions.append(new_position[1])
         next_state = self._get_state_from_positions(positions)
-        reward = None
+        # Determine rewards
+        rewards = []
+        for k in range(len(self.agents)):
+            reward = reward_full(positions, self.agents, self.current_iteration)
+            rewards.append(reward)
+        self.current_iteration += 1
         terminal = False
-        return next_state, reward, terminal
+        if self.current_iteration == self.max_iterations:
+            terminal = True
+        return next_state, rewards, terminal
 
-    def plot(self):
-        pass
+    def plot(self, state, ax):
+        for k in range(len(self.agents)):
+            position = state[0][2 * k], state[0][2 * k + 1]
+            self.agents[k].plot(position, self.plot_radius, ax)
