@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-
+import time
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
@@ -31,6 +31,7 @@ metrics = []
 # Definition of the memories and set to device
 # Define the metrics for all agents
 for agent in agents:
+
     agent.memory = ReplayMemory(config.replay_memory.size)
     metrics.append(Metrics())
 
@@ -52,6 +53,7 @@ fig_losses_returns, (ax_losses, ax_returns) = plt.subplots(1, 2)
 
 plt.show()
 
+start = time.time()
 for episode in range(config.learning.n_episodes):
     all_rewards = []
     states = env.reset()
@@ -90,6 +92,8 @@ for episode in range(config.learning.n_episodes):
     # Plot learning curves
     if not episode % config.learning.plot_curves_every:
         print("Episode", episode)
+        print("Time :", time.time()-start)
+
         ax_losses.cla()
         ax_returns.cla()
         for k in range(len(agents)):

@@ -79,5 +79,5 @@ def distance_reward(x, y, observations, idx):
     x1 = observations[2 * idx]
     y1 = observations[2 * idx + 1]
     distance = np.linalg.norm([x - x1, y - y1])
-    rw = config.reward.coef_distance_reward * distance
+    rw = np.exp(-config.reward.coef_distance_reward * distance**2)
     return (rw, distance)
