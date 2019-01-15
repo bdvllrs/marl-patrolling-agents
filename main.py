@@ -51,10 +51,12 @@ for episode in range(config.learning.n_episodes):
     while not terminal:
         actions = [0 for i in range(number_agents)]  # TODO
         next_states, rewards, terminal = env.step(states, actions)
+        # Plot environment
         env.plot(states, ax_board)
         plt.draw()
         plt.pause(0.0001)
 
+        # Learning Step
         for k in range(len(agents)):
             # Add to agent memory
             agents[k].memory.add(states[k], next_states[k], actions[k], rewards[k])
