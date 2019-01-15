@@ -19,7 +19,7 @@ env:
   reward_type: full # Must be between full and sparse.
   board_size: 15 # Size of the board
   max_iterations: 50 # Number maximum of steps
-  plot_radius: 0.01
+  plot_radius: 0.1
 
 learning:
   cuda: Yes # cuda or cpu

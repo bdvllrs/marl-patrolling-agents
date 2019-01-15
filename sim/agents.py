@@ -78,6 +78,9 @@ class AgentDQN(Agent):
         self.target_net = DQNUnit().to(self.device)
         self.policy_optimizer = Adam(self.policy_net.parameters(), lr=config.agents.lr)
         self.update(self.target_net, self.policy_net)
+        self.target_net.eval()
+
+        self.n_iter = 0
 
     def hard_update(self, target, policy):
         """
@@ -86,17 +89,18 @@ class AgentDQN(Agent):
         target.load_state_dict(policy.state_dict())
 
     def soft_update(self, target, policy):
-        pass
+        raise NotImplementedError
 
     def draw_action(self, state):
-        p = np.random.random()
-        state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
-        if p < self.epsilon_greedy:
-            action_probs = self.policy_net(state).detach().cpu().numpy()
-            action = np.argmax(action_probs[0])
-        else:
-            action = random.randrange(self.number_actions)
-        return action
+        with torch.no_grad():
+            p = np.random.random()
+            state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
+            if p < self.epsilon_greedy:
+                action_probs = self.policy_net(state).detach().cpu().numpy()
+                action = np.argmax(action_probs[0])
+            else:
+                action = random.randrange(self.number_actions)
+            return action
 
     def load(self, name):
         """
@@ -152,5 +156,10 @@ class AgentDQN(Agent):
         self.policy_optimizer.zero_grad()
         loss.backward()
         self.policy_optimizer.step()
+
+        if not self.n_iter % self.update_frequency:
+            self.update(self.target_net, self.policy_net)
+
+        self.n_iter += 1
 
         return loss.detach().cpu().item()

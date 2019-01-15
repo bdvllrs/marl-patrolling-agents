@@ -14,7 +14,7 @@ class Env:
 
         self.plot_radius = env_config.plot_radius
 
-        self.possible_location_values = [k / self.board_size for k in range(self.board_size)]
+        self.possible_location_values = [float(k) / float(self.board_size) for k in range(self.board_size)]
 
         self.current_iteration = 0
         self.max_iterations = env_config.max_iterations
@@ -67,10 +67,11 @@ class Env:
             position = index_x, index_y - 1
         else:
             position = index_x + 1, index_y
-        if 0 < position[0] or position[0] >= len(self.possible_location_values):
+        if position[0] < 0 or position[0] >= len(self.possible_location_values):
             position = index_x, position[1]
-        if 0 < position[1] or position[1] >= len(self.possible_location_values):
+        if position[1] < 0 or position[1] >= len(self.possible_location_values):
             position = position[0], index_y
+
         return self.possible_location_values[position[0]], self.possible_location_values[position[1]]
 
     def _get_state_from_positions(self, positions):
