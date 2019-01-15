@@ -14,7 +14,7 @@ class Testagent(unittest.TestCase):
             output = model(input)
 
 
-    def test_isupper(self):
+    def test_draw_action(self):
         self.assertTrue('FOO'.isupper())
         self.assertFalse('Foo'.isupper())
 

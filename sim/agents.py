@@ -76,7 +76,7 @@ class AgentDQN(Agent):
         self.policy_net = DQNUnit().to(self.device)
         self.target_net = DQNUnit().to(self.device)
         self.policy_optimizer = Adam(self.policy_net.parameters(), lr=config.agents.lr)
-        self.hard_update(self.target_net, self.policy_net)
+        self.update(self.target_net, self.policy_net)
 
     def hard_update(self, target, policy):
         """
@@ -84,26 +84,45 @@ class AgentDQN(Agent):
         """
         target.load_state_dict(policy.state_dict())
 
-    def draw_action(self, observation):
+    def soft_update(self, target, policy):
+        pass
+
+    def draw_action(self, state):
         p = np.random.random()
         if p < self.epsilon_greedy:
-            action_probs = self.policy_net(observation)
+            action_probs = self.policy_net(state)
             action = np.argmax(action_probs[0])
         else:
             action = random.randrange(self.number_actions)
         return action
 
     def load(self, name):
+        """
+        load models
+        :param name: adress of saved models
+        :return: models init
+        """
         params = torch.load(name)
         self.policy_net.load_state_dict(params['policy'])
         self.target_net.load_state_dict(params['target_policy'])
         self.policy_optimizer.load_state_dict(params['policy_optimizer'])
 
     def save(self, name):
+        """
+        load models
+        :param name: adress of saved models
+        :return: models saved
+        :return:
+        """
         save_dict = {'policy': self.policy_net.state_dict(),
                      'target_policy': self.target_net.state_dict(),
                      'policy_optimizer': self.policy_optimizer.state_dict()}
         torch.save(save_dict, name)
 
     def learn(self, batch):
+        """
+
+        :param batch: for 1 agent, learn
+        :return: loss
+        """
         pass
