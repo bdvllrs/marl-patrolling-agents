@@ -1,5 +1,7 @@
-Bibli/
+*.pyc
 .idea/
 __pycache__/
-*.pyc
-fig/
+
+builds/
+config/*
+!config/default.yaml
