@@ -1,20 +1,24 @@
 agents:
   number_preys: 1
-  #
   number_predators: 2
-  #
-  gamma: 0.9
-  #
-  epsilon_greedy: 0.01
-  #
-  lr: 0.01
-  #
-  nbre_actions: 5
-  #
-  update_frequency: 20
-  #
-  update_type: hard
+
+  # For RL
+  gamma: 0.9 # Discount factor.
+  epsilon_greedy: 0.9 # Probability of exploration.
+  lr: 0.01 # Learning rate
+  nbre_actions: 5 # Must be 5 [none, top, left, right, bottom] or 9 with corners added.
+  update_frequency: 20 # Update the target net every...
+  update_type: hard # Type of update.
 
 replay_memory:
-  size: 10000
-  shuffle: No
+  size: 10000 # Maximum size of the memory.
+  shuffle: No # If Yes, returns random batches among the elements in the memory. Else always the last ones.
+
+env:
+  noise: 0.001 # Agents' actions are not successful with this probability.
+  reward_type: full # Must be between full and sparse.
+  board_size: 15 # Size of the board
+
+learning:
+  device: cuda # cuda or cpu
+  n_episodes: 500000 # Number of episodes
