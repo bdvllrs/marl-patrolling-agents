@@ -2,7 +2,7 @@ import torch
 
 
 class Agent:
-    type = "pray"  # or predator
+    type = "prey"  # or predator
     id = 0
 
     # For RL
@@ -13,7 +13,7 @@ class Agent:
     update_type = "hard"
 
     def __init__(self, type, agent_id, agent_config):
-        assert type in ["pray", "predator"], "Agent type is not correct."
+        assert type in ["prey", "predator"], "Agent type is not correct."
         self.type = type
         self.id = agent_id
 
@@ -35,6 +35,9 @@ class Agent:
             self.hard_update()
         elif self.update_type == "soft":
             self.soft_update()
+
+    def plot(self, state):
+        pass
 
     def soft_update(self):
         raise NotImplementedError
