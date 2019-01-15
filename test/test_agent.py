@@ -1,9 +1,18 @@
 import unittest
+import torch
+from model.DQN import DQN_unit
+from utils.config import Config
+config = Config('./builds')
 
-class TestEnv(unittest.TestCase):
+class Testagent(unittest.TestCase):
 
-    def test_actions(self):
-        self.assertEqual(len(self.actions), 5)
+    def test_DQN_unit(self):
+        n = config.agents.number_preys + config.agents.number_predators
+        input = torch.randn(128, n)
+        model = DQN_unit()
+        with self.assertRaises(TypeError):
+            output = model(input)
+
 
     def test_isupper(self):
         self.assertTrue('FOO'.isupper())
