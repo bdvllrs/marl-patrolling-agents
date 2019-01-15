@@ -12,7 +12,7 @@ agents:
 
 replay_memory:
   size: 10000 # Maximum size of the memory.
-  shuffle: No # If Yes, returns random batches among the elements in the memory. Else always the last ones.
+  shuffle: Yes # If Yes, returns random batches among the elements in the memory. Else always the last ones.
 
 env:
   noise: 0.001 # Agents' actions are not successful with this probability.
@@ -23,4 +23,6 @@ env:
 
 learning:
   device: cuda # cuda or cpu
+  batch_size: 148
   n_episodes: 500000 # Number of episodes
+  save_folder: ./builds/
