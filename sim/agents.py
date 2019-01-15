@@ -90,11 +90,17 @@ class AgentDQN(Agent):
         return action
 
     def load(self, name):
-        self.eval_network.load_weights(name)
-        self.update_target_weights()
+        params = torch.load(name)
+        self.policy.load_state_dict(params['policy'])
+        self.target_policy.load_state_dict(params['target_policy'])
+        self.policy_optimizer.load_state_dict(params['policy_optimizer'])
 
     def save(self, name):
-        self.eval_network.save_weights(name)
+        save_dict = {'policy': self.policy.state_dict(),
+         'target_policy': self.target_policy.state_dict(),
+         'policy_optimizer': self.policy_optimizer.state_dict()}
+        torch.save(save_dict, name)
+
 
     def learn(self, batch):
         pass
