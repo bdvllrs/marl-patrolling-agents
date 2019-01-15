@@ -4,12 +4,11 @@ import torch.nn.functional as F
 
 # if gpu is to be used
 
-#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device ="cpu"
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cpu"
 print(device)
 
 double = True
-
 
 
 def optimize_model(env, batch_size, episode):
@@ -45,11 +44,12 @@ def optimize_model(env, batch_size, episode):
             # state value or 0 in case the state was final.
             next_state_values = torch.zeros(batch_size, device=device)
             if not double:
-                next_state_values[non_final_mask] = agent.target_net(non_final_next_states.to(device)).max(1)[0].detach()
+                next_state_values[non_final_mask] = agent.target_net(non_final_next_states.to(device)).max(1)[
+                    0].detach()
             else:
                 Qsa_prime_actions = agent.policy_net(non_final_next_states.to(device)).max(1)[1].detach()
                 test = agent.target_net(non_final_next_states.to(device))
-                test2=test.gather(1, Qsa_prime_actions.view(-1,1))
+                test2 = test.gather(1, Qsa_prime_actions.view(-1, 1))
                 next_state_values[non_final_mask] = test2.squeeze(1)
 
             # Compute the expected Q values
@@ -68,8 +68,7 @@ def optimize_model(env, batch_size, episode):
             # Optimize the model
 
 
-
-def soft_update(local_model, target_model, tau= 2e-3 ):
+def soft_update(local_model, target_model, tau=2e-3):
     """
     Params
     ======
@@ -78,4 +77,4 @@ def soft_update(local_model, target_model, tau= 2e-3 ):
         tau (float): interpolation parameter
     """
     for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
-        target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
+        target_param.data.copy_(tau * local_param.data + (1.0 - tau) * target_param.data)
