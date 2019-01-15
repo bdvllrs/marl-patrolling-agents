@@ -107,7 +107,7 @@ class AgentDQN(Agent):
         :return: models saved
         :return:
         """
-        save_dict = {'policy': self.policy.state_dict(),
+        save_dict = {'policy': self.policy_net.state_dict(),
          'target_policy': self.target_policy.state_dict(),
          'policy_optimizer': self.policy_optimizer.state_dict()}
         torch.save(save_dict, name)

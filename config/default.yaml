@@ -22,3 +22,6 @@ env:
 learning:
   device: cuda # cuda or cpu
   n_episodes: 500000 # Number of episodes
+
+reward:
+  coef_distance_reward: 0.001
