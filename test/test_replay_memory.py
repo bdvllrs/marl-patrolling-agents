@@ -1,9 +1,15 @@
 import unittest
+from sim import ReplayMemory
+from utils import Config
+
+config = Config("./config")
+
 
 class TestEnv(unittest.TestCase):
 
-    def test_actions(self):
-        self.assertEqual(len(self.actions), 5)
+    def test_size(self):
+        rm = ReplayMemory(5)
+        self.assertTrue(len(rm) <= config.replay_memory)
 
     def test_isupper(self):
         self.assertTrue('FOO'.isupper())

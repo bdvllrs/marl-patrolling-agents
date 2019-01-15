@@ -14,3 +14,7 @@ agents:
   update_frequency: 20
   #
   update_type: hard
+
+replay_memory:
+  size: 10000
+  shuffle: No
