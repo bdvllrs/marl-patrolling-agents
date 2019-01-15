@@ -129,12 +129,12 @@ def distance_enemies_around(agent, agents, max_distance=None):
         max_distance: max distance. Default agent's field of view
     Returns: distances
     """
-    max_distance = agent.view_radius if max_distance is None else max_distance
+    # max_distance = agent.view_radius if max_distance is None else max_distance
     enemies_around = []
     for other_agent in agents:
         if agent.type != other_agent.type:
             dist_agents = get_distance_between(agent.limit_board, agent.position, other_agent.position)
-            if dist_agents <= max_distance:
+            if max_distance is None or dist_agents <= max_distance:
                 enemies_around.append(dist_agents)
     return enemies_around
 
