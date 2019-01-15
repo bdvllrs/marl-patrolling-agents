@@ -1,0 +1,15 @@
+number_prey: 1
+#
+number_predator: 2
+#
+gamma: 0.9
+#
+epsilon_greedy: 0.01
+#
+lr: 0.01
+#
+nbre_actions: 5
+#
+update_frequency: 20
+#
+update_type: hard
