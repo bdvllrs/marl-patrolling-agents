@@ -42,6 +42,8 @@ class ReplayMemory:
 
         Returns: (state_batch, next_state_batch, action_batch, reward_batch)
         """
+        if len(self) < 10 * batch_size:
+            return None
         permutation = np.arange(0, len(self))
         if shuffle:
             np.random.shuffle(permutation)

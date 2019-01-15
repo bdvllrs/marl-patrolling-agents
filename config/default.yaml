@@ -22,11 +22,11 @@ env:
   plot_radius: 0.01
 
 learning:
-  device: cuda # cuda or cpu
+  cuda: Yes # cuda or cpu
   batch_size: 148
   n_episodes: 500000 # Number of episodes
   save_folder: ./builds/
-  DDQN: True
+  DDQN: Yes
 
   plot_episodes_every: 100
   plot_curves_every: 100

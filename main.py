@@ -48,7 +48,7 @@ for agent in agents:
 fig_board = plt.figure(0)
 ax_board = fig_board.gca()
 
-fig_losses_returns, (ax_losses, ax_returns) = plt.subplots(2, 0)
+fig_losses_returns, (ax_losses, ax_returns) = plt.subplots(1, 2)
 
 plt.show()
 
@@ -63,6 +63,7 @@ for episode in range(config.learning.n_episodes):
 
         if not episode % config.learning.plot_episodes_every:
             # Plot environment
+            ax_board.cla()
             env.plot(states, ax_board)
             plt.draw()
             plt.pause(0.0001)
@@ -74,8 +75,9 @@ for episode in range(config.learning.n_episodes):
             # Get batch for learning
             batch = agents[k].memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
             # Learn
-            loss = agents[k].learn(batch)
-            metrics[k].add_loss(loss)
+            if batch is not None:
+                loss = agents[k].learn(batch)
+                metrics[k].add_loss(loss)
 
         states = next_states
 
@@ -87,12 +89,15 @@ for episode in range(config.learning.n_episodes):
 
     # Plot learning curves
     if not episode % config.learning.plot_curves_every:
+        ax_losses.cla()
+        ax_returns.cla()
         for k in range(len(agents)):
             # Compute average of losses of all learning step in episode and add it to the list of losses
             metrics[k].compute_loss_average()
 
             metrics[k].plot_losses(ax_losses, legend=agents[k].id)
             metrics[k].plot_returns(ax_returns, legend=agents[k].id)
+        plt.legend()
         plt.draw()
         plt.pause(0.0001)
 

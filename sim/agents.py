@@ -90,8 +90,9 @@ class AgentDQN(Agent):
 
     def draw_action(self, state):
         p = np.random.random()
+        state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
         if p < self.epsilon_greedy:
-            action_probs = self.policy_net(state)
+            action_probs = self.policy_net(state).detach().cpu().numpy()
             action = np.argmax(action_probs[0])
         else:
             action = random.randrange(self.number_actions)
@@ -127,26 +128,29 @@ class AgentDQN(Agent):
         :return: loss
         """
         state_batch, next_state_batch, action_batch, reward_batch = batch
-        state_batch = torch.FloatTensor(state_batch, device = self.device)
-        next_state_batch = torch.FloatTensor(next_state_batch, device = self.device)
-        action_batch = torch.LongTensor(action_batch, device = self.device)
-        reward_batch = torch.FloatTensor(reward_batch, device = self.device)
+        state_batch = torch.FloatTensor(state_batch, device=self.device)
+        next_state_batch = torch.FloatTensor(next_state_batch, device=self.device)
+        action_batch = torch.LongTensor(action_batch, device=self.device)
+        reward_batch = torch.FloatTensor(reward_batch, device=self.device)
 
-        action_by_policy = self.policy_net(state_batch).gather(1, action_batch)
+        action_batch = action_batch.reshape(action_batch.size(0), 1)
+        reward_batch = reward_batch.reshape(reward_batch.size(0), 1)
+
+        policy_output = self.policy_net(state_batch)
+        action_by_policy = policy_output.gather(1, action_batch)
 
         if config.learning.DDQN:
-            actions_next = self.policy_net(next_state_batch).detach().max(1)[1]
-            Qsa_prime_targets = self.target_net(next_state_batch)[actions_next]
+            actions_next = self.policy_net(next_state_batch).detach().max(1)[1].unsqueeze(1)
+            Qsa_prime_targets = self.target_net(next_state_batch).gather(1, actions_next)
 
         else:
             Qsa_prime_targets = self.target_net(next_state_batch).detach().max(1)[0]
 
-
-        actions_by_cal = reward_batch  + (self.gamma * Qsa_prime_targets)
+        actions_by_cal = reward_batch + (self.gamma * Qsa_prime_targets)
 
         loss = F.mse_loss(action_by_policy, actions_by_cal)
         self.policy_optimizer.zero_grad()
         loss.backward()
         self.policy_optimizer.step()
 
-
+        return loss.detach().cpu().item()

@@ -127,10 +127,7 @@ class Env:
             positions.append(new_position[1])
         next_state = self._get_state_from_positions(positions)
         # Determine rewards
-        rewards = []
-        for k in range(len(self.agents)):
-            reward = reward_full(positions, self.agents, self.current_iteration)
-            rewards.append(reward)
+        rewards = reward_full(positions, self.agents, self.current_iteration)
         self.current_iteration += 1
         terminal = False
         if self.current_iteration == self.max_iterations:
