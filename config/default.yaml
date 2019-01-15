@@ -26,3 +26,6 @@ learning:
   batch_size: 148
   n_episodes: 500000 # Number of episodes
   save_folder: ./builds/
+
+reward:
+  coef_distance_reward: 0.001
