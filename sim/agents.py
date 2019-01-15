@@ -26,7 +26,7 @@ class Agent:
     last_action = None
     color = "red"
     limit_board = None
-    view_radius = 15  # manhattan distance
+    view_radius = 5  # manhattan distance
     max_size_history = 10000
     can_learn = False
 
@@ -116,7 +116,6 @@ class Agent:
         x, y = self.position
         circle = plt.Circle((x, y), radius=radius, color=self.color)
         plt.gcf().gca().add_artist(circle)
-        plt.text(x, y, self.name)
 
     def draw_action(self, obs):
         """
@@ -130,33 +129,23 @@ class Agent:
 class RLAgent(Agent):
     can_learn = True
 
-    def __init__(self, name, n_agents, gamma=0.9):
+    def __init__(self, name, view_radius=15, gamma=0.9):
         super(RLAgent, self).__init__(name)
+        self.view_radius = view_radius
         self.gamma = gamma
         self.EPS_START = 0.9
         self.EPS_END = 0.4
         self.EPS_DECAY = 500000
         self.steps_done = 0
-        self.policy_net = DQN(n_agents).to(device)
-        self.target_net = DQN(n_agents).to(device)
+        self.policy_net = DQN(view_radius).to(device)
+        self.target_net = DQN(view_radius).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=0.001)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
-        self.eps_greedy = 0.5
-        self.n_actions = 5
 
     # Exploration policy (epsilon greedy)
-    def choose_action(self, state):
-        p = np.random.random()
-        if p < self.eps_greedy:
-            action_probs = self.policy_net(state).max(1)[1]
-            return np.argmax(action_probs[0])
-        else:
-            return random.randrange(self.n_actions)
-
-        # Exploration policy (epsilon greedy)
     def select_action(self, state):
         sample = random.random()
         eps_threshold = (self.EPS_END + (self.EPS_START - self.EPS_END) *
@@ -164,8 +153,8 @@ class RLAgent(Agent):
         self.steps_done += 1
 
         state = torch.from_numpy(state).float().to(device).unsqueeze(0)
-        # h = state.shape[-1]
-        # state = state.reshape(1, h, h)
+        h = state.shape[-1]
+        state = state.reshape(1, h, h)
 
         if sample > eps_threshold:
             with torch.no_grad():
