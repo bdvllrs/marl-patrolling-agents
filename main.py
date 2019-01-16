@@ -69,7 +69,7 @@ for episode in range(config.learning.n_episodes):
         if not episode % config.learning.plot_episodes_every:
             # Plot environment
             ax_board.cla()
-            env.plot(states, rewards, ax_board)
+            env.plot(next_states, rewards, ax_board)
             plt.draw()
             plt.pause(0.01)
 
