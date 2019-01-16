@@ -4,7 +4,7 @@ import time
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
-from sim import Env, ReplayMemory, AgentDDPG
+from sim import Env, ReplayMemory, AgentDDPG, AgentMADDPG
 from utils import Config, Metrics, compute_discounted_return
 
 plt.ion()
@@ -21,9 +21,9 @@ os.makedirs(model_path)
 
 number_agents = config.agents.number_predators + config.agents.number_preys
 # Definition of the agents
-agents = [AgentDDPG("predator", "predator-{}".format(k), device, config.agents)
+agents = [AgentMADDPG("predator", "predator-{}".format(k), device, config.agents)
           for k in range(config.agents.number_predators)]
-agents += [AgentDDPG("prey", "prey-{}".format(k), device, config.agents)
+agents += [AgentMADDPG("prey", "prey-{}".format(k), device, config.agents)
            for k in range(config.agents.number_preys)]
 
 
@@ -75,6 +75,10 @@ for episode in range(config.learning.n_episodes):
             plt.draw()
             plt.pause(0.01)
 
+        all_state_batch = []
+        all_next_state_batch = []
+        all_action_batch = []
+        all_reward_batch = []
         # Learning Step
         for k in range(len(agents)):
             # Add to agent memory
@@ -83,11 +87,19 @@ for episode in range(config.learning.n_episodes):
             batch = agents[k].memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
             # Learn
             if batch is not None:
-                loss = agents[k].learn_critic(batch)
-                actor_loss = agents[k].learn_policy(batch, k)
-                metrics[k].add_loss(loss)
+                state_batch, next_state_batch, action_batch, reward_batch = batch
+                all_state_batch.append(state_batch)
+                all_next_state_batch.append(next_state_batch)
+                all_action_batch.append(action_batch)
+                all_reward_batch.append(reward_batch)
+        all_batch = np.array(state_batch), next_state_batch, action_batch, reward_batch
 
-        states = next_states
+
+        for k in range(len(agents)):
+            loss = agents[k].learn_critic(batch)
+            actor_loss = agents[k].learn_policy(batch, k)
+            metrics[k].add_loss(loss)
+            states = next_states
 
     # Compute discounted return of the episode
     for k in range(len(agents)):
