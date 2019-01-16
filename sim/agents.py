@@ -188,9 +188,9 @@ class AgentDDPG(Agent):
         super(AgentDDPG, self).__init__(type, agent_id, device, agent_config)
 
         self.policy_net = ActorNetwork().to(self.device)
-        self.critic_net = CriticNetwork().to(self.device)
+        self.critic_net = CriticNetwork(1).to(self.device)
         self.target_policy = ActorNetwork().to(self.device)
-        self.target_critic = CriticNetwork().to(self.device)
+        self.target_critic = CriticNetwork(1).to(self.device)
 
         self.policy_optimizer = Adam(self.policy_net.parameters(), lr=config.agents.lr)
         self.critic_optimizer = Adam(self.critic_net.parameters(), lr=config.agents.lr)
@@ -212,12 +212,14 @@ class AgentDDPG(Agent):
             target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
 
-    def draw_action(self, state):
-
+    def draw_action(self, state, no_exploration):
         with torch.no_grad():
             state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
-            action = gumbel_softmax(self.policy_net(state), hard=True).max(1)[1].detach().cpu().numpy()
-            return action
+            if no_exploration:
+                action = self.policy_net(state).max(1)[1].detach().cpu().numpy()
+            else:
+                action = gumbel_softmax(self.policy_net(state), hard=True).max(1)[1].detach().cpu().numpy()
+        return action
 
     def load(self, name):
         """
@@ -314,9 +316,9 @@ class AgentMADDPG(Agent):
         super(AgentMADDPG, self).__init__(type, agent_id, device, agent_config)
 
         self.policy_net = ActorNetwork().to(self.device)
-        self.critic_net = CriticNetwork().to(self.device)
+        self.critic_net = CriticNetwork(2).to(self.device)
         self.target_policy = ActorNetwork().to(self.device)
-        self.target_critic = CriticNetwork().to(self.device)
+        self.target_critic = CriticNetwork(2).to(self.device)
 
         self.policy_optimizer = Adam(self.policy_net.parameters(), lr=config.agents.lr)
         self.critic_optimizer = Adam(self.critic_net.parameters(), lr=config.agents.lr)
@@ -338,12 +340,14 @@ class AgentMADDPG(Agent):
             target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
 
-    def draw_action(self, state):
-
+    def draw_action(self, state, no_exploration):
         with torch.no_grad():
             state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
-            action = gumbel_softmax(self.policy_net(state), hard=True).max(1)[1].detach().cpu().numpy()
-            return action
+            if no_exploration:
+                action = self.policy_net(state).max(1)[1].detach().cpu().numpy()
+            else:
+                action = gumbel_softmax(self.policy_net(state), hard=True).max(1)[1].detach().cpu().numpy()
+        return action
 
     def load(self, name):
         """

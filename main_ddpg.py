@@ -57,13 +57,16 @@ plt.show()
 
 start = time.time()
 for episode in range(config.learning.n_episodes):
+    test_step = False
+    if not episode % config.learning.plot_episodes_every:
+        test_step = True
     all_rewards = []
     states = env.reset()
     terminal = False
     while not terminal:
         actions = []
         for i in range(len(agents)):
-            action = agents[i].draw_action(states[i])
+            action = agents[i].draw_action(states[i], no_exploration=test_step)
             actions.append(action[0])
         next_states, rewards, terminal = env.step(states, actions)
         all_rewards.append(rewards)

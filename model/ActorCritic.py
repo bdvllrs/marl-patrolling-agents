@@ -33,8 +33,9 @@ class CriticNetwork(nn.Module):
     """
     A network for critic
     """
-    def __init__(self, output_size=1):
+    def __init__(self, dim_concat, output_size=1):
         super(CriticNetwork, self).__init__()
+        self.dim_concat = dim_concat
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         hidden_size = config.agents.hidden_size
         state_dim = 4 * self.n_agents
@@ -45,7 +46,7 @@ class CriticNetwork(nn.Module):
 
     def __call__(self, state, action):
         out = nn.functional.relu(self.fc1(state))
-        out = torch.cat([out, action.float()], 2)
+        out = torch.cat([out, action.float()], self.dim_concat)
         out = nn.functional.relu(self.fc2(out))
         out = self.fc3(out)
         return out
