@@ -19,6 +19,8 @@ class Env:
         self.current_iteration = 0
         self.max_iterations = env_config.max_iterations
 
+        self.infinite_world = env_config.infinite_world
+
         self.agents = []
         self.initial_positions = []
 
@@ -67,10 +69,14 @@ class Env:
             position = index_x, index_y - 1
         else:
             position = index_x + 1, index_y
-        if position[0] < 0 or position[0] >= len(self.possible_location_values):
-            position = index_x, position[1]
-        if position[1] < 0 or position[1] >= len(self.possible_location_values):
-            position = position[0], index_y
+        if not self.infinite_world:
+            if position[0] < 0 or position[0] >= len(self.possible_location_values):
+                position = index_x, position[1]
+            if position[1] < 0 or position[1] >= len(self.possible_location_values):
+                position = position[0], index_y
+        else:
+            # If infinite world, goes back to the other side
+            position = position[0] % len(self.possible_location_values), position[1] % len(self.possible_location_values)
 
         return self.possible_location_values[position[0]], self.possible_location_values[position[1]]
 
@@ -100,15 +106,16 @@ class Env:
         """
         index_x = self.possible_location_values.index(current_position[0])
         index_y = self.possible_location_values.index(current_position[1])
+        max_len = len(self.possible_location_values)
         indexes = [(index_x, index_y)]
-        if index_x > 0:
-            indexes.append((index_x - 1, index_y))  # Left
-        if index_x < len(self.possible_location_values) - 1:  # Right
-            indexes.append((index_x + 1, index_y))
-        if index_y > 0:  # Bottom
-            indexes.append((index_x, index_y - 1))  # Left
-        if index_y < len(self.possible_location_values) - 1:  # Top
-            indexes.append((index_x, index_y + 1))
+        if self.infinite_world or index_x > 0:
+            indexes.append(((index_x - 1) % max_len, index_y % max_len))  # Left
+        if self.infinite_world or index_x < len(self.possible_location_values) - 1:  # Right
+            indexes.append(((index_x + 1) % max_len, index_y % max_len))
+        if self.infinite_world or index_y > 0:  # Bottom
+            indexes.append((index_x % max_len, (index_y - 1) % max_len))  # Left
+        if self.infinite_world or index_y < len(self.possible_location_values) - 1:  # Top
+            indexes.append((index_x % max_len, (index_y + 1) % max_len))
         return indexes
 
     def reset(self):
