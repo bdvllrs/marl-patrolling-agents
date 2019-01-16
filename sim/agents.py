@@ -6,6 +6,7 @@ from torch.optim import Adam
 from model.DQN import DQNUnit
 from utils.config import Config
 import torch.nn.functional as F
+import math
 
 config = Config('./config')
 
@@ -15,7 +16,7 @@ class Agent:
     id = 0
     # For RL
     gamma = 0.9
-    epsilon_greedy = 0.01
+    EPS_START = 0.01
     lr = 0.1
     update_frequency = 0.1
     update_type = "hard"
@@ -29,7 +30,9 @@ class Agent:
 
         # For RL
         self.gamma = agent_config.gamma
-        self.epsilon_greedy = agent_config.epsilon_greedy
+        self.EPS_START = agent_config.EPS_START
+        self.EPS_END = agent_config.EPS_END
+        self.EPS_DECAY = agent_config.EPS_DECAY
         self.lr = agent_config.lr
         self.update_frequency = agent_config.update_frequency
         assert agent_config.update_type in ["hard", "soft"], "Update type is not correct."
@@ -82,6 +85,7 @@ class AgentDQN(Agent):
         self.target_net.eval()
 
         self.n_iter = 0
+        self.steps_done = 0
 
     def hard_update(self, target, policy):
         """
@@ -93,10 +97,13 @@ class AgentDQN(Agent):
         raise NotImplementedError
 
     def draw_action(self, state):
+        eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
+                                  math.exp(-1. * self.steps_done / self.EPS_DECAY)
+        self.steps_done += 1
         with torch.no_grad():
             p = np.random.random()
             state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
-            if p < self.epsilon_greedy:
+            if p > eps_threshold:
                 action_probs = self.policy_net(state).detach().cpu().numpy()
                 action = np.argmax(action_probs[0])
             else:

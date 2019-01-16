@@ -17,7 +17,7 @@ class Config:
         self.__data = config if config is not None else {}
         if path is not None:
             self.__path = os.path.abspath(os.path.join(os.curdir, path))
-            with open(os.path.join(self.__path, "default.yaml"), "rb") as default_config:
+            with open(os.path.join(self.__path, "config.yaml"), "rb") as default_config:
                 self.__data.update(yaml.load(default_config))
             for config in sorted(os.listdir(self.__path)):
                 if config != "defaulf.yaml" and config[-4:] in ["yaml", "yml"]:
