@@ -21,7 +21,6 @@ class Config:
                 self.__data.update(yaml.load(default_config))
             for config in sorted(os.listdir(self.__path)):
                 if config != "default.yaml" and config[-4:] in ["yaml", "yml"]:
-                    print(config)
                     with open(os.path.join(self.__path, config), "rb") as config_file:
                         self.__data = update_config(self.__data, yaml.load(config_file))
 
