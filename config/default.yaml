@@ -21,6 +21,8 @@ env:
   max_iterations: 50 # Number maximum of steps
   plot_radius: 0.1
 
+  infinite_world: No # If Yes, transported to the other side of the board when crossing border.
+
 learning:
   cuda: Yes # cuda or cpu
   batch_size: 148
@@ -37,5 +39,6 @@ learning:
 reward:
   coef_distance_reward: 10
   hot_walls: Yes # If Yes, agents will lose reward if they are against the wall.
+
   share_wins_among_predators: No # If one predator wins, other predator also get some reward
   reward_if_predators_win: 0.8 # If share_wins_among_predator is Yes, how many reward to give to the other predators (in [-1, 1])
