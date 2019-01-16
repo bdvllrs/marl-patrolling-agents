@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import random
 from torch.optim import Adam
+
+from model.ActorCritic import ActorNetwork, CriticNetwork
 from model.DQN import DQNUnit
 from utils.config import Config
 import torch.nn.functional as F
@@ -178,3 +180,127 @@ class AgentDQN(Agent):
         self.n_iter += 1
 
         return loss.detach().cpu().item()
+
+class AgentDDPG(Agent):
+    def __init__(self, type, agent_id, device, agent_config):
+        super(AgentDDPG, self).__init__(type, agent_id, device, agent_config)
+
+        self.policy_net = ActorNetwork().to(self.device)
+        self.critic_net = CriticNetwork().to(self.device)
+        self.target_policy = ActorNetwork().to(self.device)
+        self.target_critic = CriticNetwork().to(self.device)
+
+        self.policy_optimizer = Adam(self.policy_net.parameters(), lr=config.agents.lr)
+        self.critic_optimizer = Adam(self.critic_net.parameters(), lr=config.agents.lr)
+
+        self.update(self.target_policy, self.policy_net)
+        self.update(self.target_critic, self.critic_net)
+        self.n_iter =0
+
+
+
+    def hard_update(self, target, policy):
+        """
+        Copy network parameters from source to target
+        """
+        target.load_state_dict(policy.state_dict())
+
+    def soft_update(self, target, policy, tau = config.learning.tau):
+        for target_param, param in zip(target.parameters(), policy.parameters()):
+            target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+
+
+    def draw_action(self, state):
+
+        with torch.no_grad():
+            state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
+            action_probs = self.policy_net(state).detach().cpu().numpy()
+            return action_probs[0]
+
+    def load(self, name):
+        """
+        load models
+        :param name: adress of saved models
+        :return: models init
+        """
+        params = torch.load(name)
+        self.policy_net.load_state_dict(params['policy'])
+        self.target_policy.load_state_dict(params['target_policy'])
+        self.policy_optimizer.load_state_dict(params['policy_optimizer'])
+        self.critic_net.load_state_dict(params['critic'])
+        self.target_critic.load_state_dict(params['target_critic'])
+        self.critic_optimizer.load_state_dict(params['critic_optimizer'])
+
+    def save(self, name):
+        """
+        load models
+        :param name: adress of saved models
+        :return: models saved
+        :return:
+        """
+        save_dict = {'policy': self.policy_net.state_dict(),
+                     'target_policy': self.target_policy.state_dict(),
+                     'policy_optimizer': self.policy_optimizer.state_dict(),
+                     'critic': self.critic_net.state_dict(),
+                     'target_critic': self.target_critic.state_dict(),
+                     'critic_optimizer': self.critic_optimizer.state_dict()}
+
+        torch.save(save_dict, name)
+
+
+    def learn_critic(self, batch):
+        """
+
+        :param batch:
+        :return:
+        """
+        state_batch, next_state_batch, action_batch, reward_batch = batch
+        state_batch = torch.FloatTensor(state_batch, device=self.device)
+        next_state_batch = torch.FloatTensor(next_state_batch, device=self.device)
+        action_batch = torch.LongTensor(action_batch, device=self.device)
+        reward_batch = torch.FloatTensor(reward_batch, device=self.device)
+        self.critic_optimizer.zero_grad()
+        all_trgt_acs = self.target_policy(next_state_batch).max(1)[1].unsqueeze(1)
+        target_value = reward_batch + (self.gamma * self.target_critic(next_state_batch, all_trgt_acs))
+        actual_value = self.critic_net(state_batch, action_batch.unsqueeze(1))
+        loss = F.mse_loss(actual_value, target_value.detach())
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.critic_net.parameters(), 0.5)
+        self.critic_optimizer.step()
+
+        return loss.detach().cpu().item()
+
+
+
+
+    def learn_policy(self, batch, idx):
+        """
+
+        :param batch: for 1 agent, learn
+        :return: loss
+        """
+        state_batch, next_state_batch, action_batch, reward_batch = batch
+        state_batch = torch.FloatTensor(state_batch, device=self.device)
+        next_state_batch = torch.FloatTensor(next_state_batch, device=self.device)
+        action_batch = torch.LongTensor(action_batch, device=self.device)
+        reward_batch = torch.FloatTensor(reward_batch, device=self.device)
+
+        self.policy_optimizer.zero_grad()
+
+        action = self.policy_net(state_batch).max(1)[1].unsqueeze(1)
+        # actor_loss is used to maximize the Q value for the predicted action
+        actor_loss = - self.critic_net(state_batch, action)
+        actor_loss = actor_loss.mean()
+        actor_loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), 0.5)
+        self.policy_optimizer.step()
+
+        # update actor target network and critic target network
+        if not self.n_iter % self.update_frequency:
+            self.soft_update(self.target_critic, self.critic_net)
+            self.soft_update(self.target_policy, self.policy_net)
+        self.n_iter += 1
+
+        return actor_loss.detach().cpu().item()
+
+
