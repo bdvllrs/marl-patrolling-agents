@@ -92,14 +92,18 @@ for episode in range(config.learning.n_episodes):
                 all_next_state_batch.append(next_state_batch)
                 all_action_batch.append(action_batch)
                 all_reward_batch.append(reward_batch)
-        all_batch = np.array(state_batch), next_state_batch, action_batch, reward_batch
+
+        if len(all_state_batch) > 0:
+
+            all_batch = np.array(all_state_batch), np.array(all_next_state_batch), \
+                        np.array(all_action_batch), np.array(all_reward_batch)
 
 
-        for k in range(len(agents)):
-            loss = agents[k].learn_critic(batch)
-            actor_loss = agents[k].learn_policy(batch, k)
-            metrics[k].add_loss(loss)
-            states = next_states
+            for k in range(len(agents)):
+                loss = agents[k].learn_critic(all_batch)
+                actor_loss = agents[k].learn_policy(all_batch, k)
+                metrics[k].add_loss(loss)
+                states = next_states
 
     # Compute discounted return of the episode
     for k in range(len(agents)):
@@ -116,7 +120,7 @@ for episode in range(config.learning.n_episodes):
         ax_returns.cla()
         for k in range(len(agents)):
             # Compute average of losses of all learning step in episode and add it to the list of losses
-            metrics[k].compute_loss_average()
+            metrics[k].compute_averages()
 
             metrics[k].plot_losses(ax_losses, legend=agents[k].id)
             metrics[k].plot_returns(ax_returns, legend=agents[k].id)
