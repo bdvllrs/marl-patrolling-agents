@@ -42,7 +42,7 @@ class Agent:
 
         self.device = device
 
-    def draw_action(self, observation):
+    def draw_action(self, observation, no_exploration=False):
         raise NotImplementedError
 
     def update(self, *params):
@@ -96,14 +96,19 @@ class AgentDQN(Agent):
     def soft_update(self, target, policy):
         raise NotImplementedError
 
-    def draw_action(self, state):
+    def draw_action(self, state, no_exploration=False):
+        """
+        Args:
+            state:
+            no_exploration: If True, use only exploitation policy
+        """
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
                                   math.exp(-1. * self.steps_done / self.EPS_DECAY)
         self.steps_done += 1
         with torch.no_grad():
             p = np.random.random()
             state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
-            if p > eps_threshold:
+            if no_exploration or p > eps_threshold:
                 action_probs = self.policy_net(state).detach().cpu().numpy()
                 action = np.argmax(action_probs[0])
             else:

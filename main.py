@@ -55,11 +55,14 @@ plt.show()
 
 start = time.time()
 for episode in range(config.learning.n_episodes):
+    test_step = False
+    if not episode % config.learning.plot_episodes_every:
+        test_step = True
     all_rewards = []
     states = env.reset()
     terminal = False
     while not terminal:
-        actions = [agents[i].draw_action(states[i]) for i in range(len(agents))]
+        actions = [agents[i].draw_action(states[i], no_exploration=test_step) for i in range(len(agents))]
         next_states, rewards, terminal = env.step(states, actions)
         all_rewards.append(rewards)
 
@@ -71,15 +74,16 @@ for episode in range(config.learning.n_episodes):
             plt.pause(0.01)
 
         # Learning Step
-        for k in range(len(agents)):
-            # Add to agent memory
-            agents[k].memory.add(states[k], next_states[k], actions[k], rewards[k])
-            # Get batch for learning
-            batch = agents[k].memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
-            # Learn
-            if batch is not None:
-                loss = agents[k].learn(batch)
-                metrics[k].add_loss(loss)
+        if not test_step:
+            for k in range(len(agents)):
+                # Add to agent memory
+                agents[k].memory.add(states[k], next_states[k], actions[k], rewards[k])
+                # Get batch for learning
+                batch = agents[k].memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
+                # Learn
+                if batch is not None:
+                    loss = agents[k].learn(batch)
+                    metrics[k].add_loss(loss)
 
         states = next_states
 
