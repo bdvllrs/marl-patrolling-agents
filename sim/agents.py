@@ -376,7 +376,7 @@ class AgentMADDPG(Agent):
         torch.save(save_dict, name)
 
 
-    def learn_critic(self, batch):
+    def learn_critic(self, batch, target_policies):
         """
 
         :param batch:
@@ -388,10 +388,21 @@ class AgentMADDPG(Agent):
         action_batch = torch.LongTensor(action_batch, device=self.device)
         reward_batch = torch.FloatTensor(reward_batch, device=self.device)
         self.critic_optimizer.zero_grad()
-        all_trgt_acs = self.target_policy(next_state_batch).max(1)[1].unsqueeze(1)
-        all_trgt_acs
+
+        self.n_agents = config.agents.number_preys+config.agents.number_predators
+        batch_size = config.learning.batch_size
+        all_trgt_acs = torch.cat( [(pi(nobs)).max(1)[1] for pi, nobs in
+                        zip(target_policies, next_state_batch)] , 0).reshape(self.n_agents, batch_size)
+
+        next_state_batch = next_state_batch.transpose(0, 1)
+        all_trgt_acs = all_trgt_acs.transpose(0, 1)
+        all_trgt_acs = all_trgt_acs.unsqueeze(2)
+        state_batch = state_batch.transpose(0, 1)
+        action_batch = action_batch.transpose(0, 1)
+
+
         target_value = reward_batch + (self.gamma * self.target_critic(next_state_batch, all_trgt_acs))
-        actual_value = self.critic_net(state_batch, action_batch.unsqueeze(1))
+        actual_value = self.critic_net(state_batch, action_batch.unsqueeze(2))
         loss = F.mse_loss(actual_value, target_value.detach())
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.critic_net.parameters(), 0.5)
@@ -402,7 +413,7 @@ class AgentMADDPG(Agent):
 
 
 
-    def learn_policy(self, batch, idx):
+    def learn_policy(self, batch, idx, policies):
         """
 
         :param batch: for 1 agent, learn
@@ -413,11 +424,23 @@ class AgentMADDPG(Agent):
 
         self.policy_optimizer.zero_grad()
 
-        action = gumbel_softmax(self.policy_net(state_batch), hard=True).max(1)[1].unsqueeze(1)
+        batch_size = config.learning.batch_size
 
+        action = gumbel_softmax(self.policy_net(state_batch[idx]), hard=True).max(1)[1].unsqueeze(1)
+
+
+        all_pol_acs = []
+        for i, pi, ob in zip(range(self.n_agents), policies, state_batch):
+            if i == idx:
+                all_pol_acs.append(action.squeeze(1))
+            else:
+                all_pol_acs.append(pi(ob).max(1)[1])
+        all_pol_acs = torch.cat(all_pol_acs, 0).reshape(self.n_agents, batch_size)
+        all_pol_acs = all_pol_acs.transpose(0,1)
+        state_batch = state_batch.transpose(0,1)
         #action = self.policy_net(state_batch).max(1)[1].unsqueeze(1)
-        # actor_loss is used to maximize the Q value for the predicted action
-        actor_loss = - self.critic_net(state_batch, action)
+        #actor_loss is used to maximize the Q value for the predicted action
+        actor_loss = - self.critic_net(state_batch, all_pol_acs.unsqueeze(2))
         actor_loss = actor_loss.mean()
         actor_loss.backward()
         torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), 0.5)

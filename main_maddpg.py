@@ -79,13 +79,17 @@ for episode in range(config.learning.n_episodes):
         all_next_state_batch = []
         all_action_batch = []
         all_reward_batch = []
+        target_policies = []
+        policies = []
         # Learning Step
         for k in range(len(agents)):
             # Add to agent memory
             agents[k].memory.add(states[k], next_states[k], actions[k], rewards[k])
             # Get batch for learning
             batch = agents[k].memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
-            # Learn
+            if len(target_policies)!=len(agents):
+                target_policies.append(agents[k].target_policy)
+                policies.append(agents[k].policy_net)
             if batch is not None:
                 state_batch, next_state_batch, action_batch, reward_batch = batch
                 all_state_batch.append(state_batch)
@@ -100,8 +104,8 @@ for episode in range(config.learning.n_episodes):
 
 
             for k in range(len(agents)):
-                loss = agents[k].learn_critic(all_batch)
-                actor_loss = agents[k].learn_policy(all_batch, k)
+                loss = agents[k].learn_critic(all_batch, target_policies)
+                actor_loss = agents[k].learn_policy(all_batch, k, policies)
                 metrics[k].add_loss(loss)
                 states = next_states
 
@@ -119,11 +123,12 @@ for episode in range(config.learning.n_episodes):
         ax_losses.cla()
         ax_returns.cla()
         for k in range(len(agents)):
-            # Compute average of losses of all learning step in episode and add it to the list of losses
             metrics[k].compute_averages()
 
-            metrics[k].plot_losses(ax_losses, legend=agents[k].id)
-            metrics[k].plot_returns(ax_returns, legend=agents[k].id)
+            metrics[k].plot_losses(episode, ax_losses, legend=agents[k].id)
+            metrics[k].plot_returns(episode, ax_returns, legend=agents[k].id)
+            ax_losses.set_title("Losses")
+            ax_returns.set_title("Returns")
         plt.legend()
         plt.draw()
         plt.pause(0.0001)

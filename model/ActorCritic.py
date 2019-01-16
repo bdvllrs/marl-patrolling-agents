@@ -45,7 +45,7 @@ class CriticNetwork(nn.Module):
 
     def __call__(self, state, action):
         out = nn.functional.relu(self.fc1(state))
-        out = torch.cat([out, action.float()], 1)
+        out = torch.cat([out, action.float()], 2)
         out = nn.functional.relu(self.fc2(out))
         out = self.fc3(out)
         return out
