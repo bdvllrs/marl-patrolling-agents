@@ -1,5 +1,4 @@
 from typing import List, Tuple
-from sim.agents import Agent
 
 
 def compute_discounted_return(gamma, rewards):
@@ -19,7 +18,7 @@ def compute_discounted_return(gamma, rewards):
     return discounted_return
 
 
-def get_enemy_positions(agent_index: int, agents: List[Agent], positions: List[float]) -> List[Tuple[float, float]]:
+def get_enemy_positions(agent_index: int, agents: List, positions: List[float]) -> List[Tuple[float, float]]:
     """
     Returns the list of agents enemy positions
     Args:

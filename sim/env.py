@@ -149,14 +149,15 @@ class Env:
             positions.append(new_position[1])
         next_state = self._get_state_from_positions(positions)
         # Determine rewards
-        rewards = reward_full(positions, self.agents, self.current_iteration)
+        border_positions = [self.possible_location_values[0], self.possible_location_values[-1]]
+        rewards = reward_full(positions, self.agents, border_positions, self.current_iteration)
         self.current_iteration += 1
         terminal = False
         if self.current_iteration == self.max_iterations:
             terminal = True
         return next_state, rewards, terminal
 
-    def plot(self, state, ax):
+    def plot(self, state, rewards, ax):
         for k in range(len(self.agents)):
             position = state[0][2 * k], state[0][2 * k + 1]
-            self.agents[k].plot(position, self.plot_radius, ax)
+            self.agents[k].plot(position, rewards[k], self.plot_radius, ax)

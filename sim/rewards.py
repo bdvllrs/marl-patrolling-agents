@@ -7,7 +7,7 @@ from utils import get_enemy_positions
 config = Config('./config')
 
 
-def reward_full(observations, agents: List[Agent], t):
+def reward_full(observations, agents: List[Agent], border_positions, t):
     """
     give all the rewards
     :param observations: all board
@@ -25,17 +25,23 @@ def reward_full(observations, agents: List[Agent], t):
 
         all_winners.append(is_winner)
         all_rewards.append(rw)
-    if config.reward.share_wins_among_predators:
+    if config.reward.share_wins_among_predators or config.reward.hot_walls:
         for idx, agent in enumerate(agents):
             # if predator_lost:
             #     if agent.type == "prey":
             #         if not all_winners[idx]:
             #             all_rewards[idx] = -1
             # else:
-            if not predator_lost:  # Give incentive to other predators if one wins
+            if config.reward.share_wins_among_predators and not predator_lost:
+                # Give incentive to other predators if one wins
                 if agent.type == "predator":
                     if not all_winners[idx]:
                         all_rewards[idx] = config.reward.reward_if_predators_win
+            if config.reward.hot_walls:  # If agent touches the borders, gets a penalty
+                x, y = observations[2 * idx], observations[2 * idx + 1]
+                if x in border_positions or y in border_positions:
+                    all_rewards[idx] = -1
+
     return all_rewards
 
 
