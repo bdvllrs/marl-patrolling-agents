@@ -10,9 +10,11 @@ class DQNUnit(nn.Module):
         super(DQNUnit, self).__init__()
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         self.fc = nn.Sequential(
-            nn.Linear(self.n_agents * 4, self.n_agents),
+            nn.Linear(self.n_agents * 4, 3*self.n_agents),
             nn.ReLU(),
-            nn.Linear(self.n_agents, config.agents.number_actions),
+            nn.Linear(self.n_agents * 3, 2 * self.n_agents),
+            nn.ReLU(),
+            nn.Linear(2 * self.n_agents, config.agents.number_actions),
             nn.Softmax(dim=1)
         )
 

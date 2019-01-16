@@ -4,7 +4,9 @@ agents:
 
   # For RL
   gamma: 0.9 # Discount factor.
-  epsilon_greedy: 0.9 # Probability of exploration.
+  EPS_START: 0.9 # Probability of exploration.
+  EPS_END: 0.05
+  EPS_DECAY: 200
   lr: 0.01 # Learning rate
   number_actions: 5 # Must be 5 [none, top, left, right, bottom] or 9 with corners added.
   update_frequency: 20 # Update the target net every...
