@@ -91,6 +91,26 @@ class Env:
             states.append(state)
         return states
 
+    def _get_possible_positions(self, current_position):
+        """
+        Return possible positions from the given one
+        Args:
+            current_position:
+        Returns: x_index, y_index of the possible new positions
+        """
+        index_x = self.possible_location_values.index(current_position[0])
+        index_y = self.possible_location_values.index(current_position[1])
+        indexes = [(index_x, index_y)]
+        if index_x > 0:
+            indexes.append((index_x - 1, index_y))  # Left
+        if index_x < len(self.possible_location_values) - 1:  # Right
+            indexes.append((index_x + 1, index_y))
+        if index_y > 0:  # Bottom
+            indexes.append((index_x, index_y - 1))  # Left
+        if index_y < len(self.possible_location_values) - 1:  # Top
+            indexes.append((index_x, index_y + 1))
+        return indexes
+
     def reset(self):
         """
         Returns: State for each agent. Size is (number_agents, 4 * number_agents)
@@ -123,7 +143,8 @@ class Env:
             position = prev_states[0][2 * k], prev_states[0][2 * k + 1]
             new_position = self._get_position_from_action(position, actions[k])
             if random.random() < self.noise:
-                new_position = self._get_random_position()
+                index_x, index_y = random.sample(self._get_possible_positions(position), 1)[0]
+                new_position = self.possible_location_values[index_x], self.possible_location_values[index_y]
             positions.append(new_position[0])
             positions.append(new_position[1])
         next_state = self._get_state_from_positions(positions)
