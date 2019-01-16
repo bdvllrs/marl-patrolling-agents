@@ -163,6 +163,8 @@ class AgentDQN(Agent):
         loss = F.mse_loss(action_by_policy, actions_by_cal)
         self.policy_optimizer.zero_grad()
         loss.backward()
+        for param in self.policy_net.parameters():
+            param.grad.data.clamp_(-1, 1)
         self.policy_optimizer.step()
 
         if not self.n_iter % self.update_frequency:
