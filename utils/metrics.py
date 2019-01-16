@@ -25,11 +25,12 @@ class Metrics:
             self.data["returns"].append(np.mean(self.returns_buffer))
             self.returns_buffer = []
 
-    def plot(self, key, ax, legend):
-        ax.plot(list(range(0, len(self.data[key]))), self.data[key], label=legend)
+    def plot(self, key, episode, ax, legend):
+        x = np.linspace(0, episode, len(self.data[key]))
+        ax.plot(x, self.data[key], label=legend)
 
-    def plot_returns(self, ax, legend):
-        self.plot("returns", ax, legend)
+    def plot_returns(self, episode, ax, legend):
+        self.plot("returns", episode, ax, legend)
 
-    def plot_losses(self, ax, legend):
-        self.plot("losses", ax, legend)
+    def plot_losses(self, episode, ax, legend):
+        self.plot("losses", episode, ax, legend)
