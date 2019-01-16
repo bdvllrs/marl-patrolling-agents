@@ -15,7 +15,6 @@ class DQNUnit(nn.Module):
             nn.Linear(self.n_agents * 3, 2 * self.n_agents),
             nn.ReLU(),
             nn.Linear(2 * self.n_agents, config.agents.number_actions),
-            nn.Softmax(dim=1)
         )
 
     # Called with either one element to determine next action, or a batch
