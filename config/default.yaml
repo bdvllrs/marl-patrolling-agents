@@ -37,7 +37,8 @@ learning:
   model_path: /path/to/model # path to the trained model
 
 reward:
-  coef_distance_reward: 10
+  coef_distance_reward_predator: 20
+  coef_distance_reward_prey: 20
   hot_walls: Yes # If Yes, agents will lose reward if they are against the wall.
 
   share_wins_among_predators: No # If one predator wins, other predator also get some reward
