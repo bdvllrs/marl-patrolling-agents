@@ -102,7 +102,7 @@ for episode in range(config.learning.n_episodes):
         ax_returns.cla()
         for k in range(len(agents)):
             # Compute average of losses of all learning step in episode and add it to the list of losses
-            metrics[k].compute_loss_average()
+            metrics[k].compute_averages()
 
             metrics[k].plot_losses(ax_losses, legend=agents[k].id)
             metrics[k].plot_returns(ax_returns, legend=agents[k].id)
