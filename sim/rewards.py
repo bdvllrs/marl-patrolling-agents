@@ -94,10 +94,10 @@ def distance_reward(agent_type, x, y, x1, y1) -> Tuple:
     dx = x - x1
     dy = y - y1
     if config.env.infinite_world:
-        y1_teleport = 1 - 1/config.env.board_size + y1
-        y2_teleport = 1 - 1/config.env.board_size + y
-        x1_teleport = 1 - 1/config.env.board_size + x1
-        x2_teleport = 1 - 1/config.env.board_size + x
+        y1_teleport = 1 - 1 / config.env.board_size + y1
+        y2_teleport = 1 - 1 / config.env.board_size + y
+        x1_teleport = 1 - 1 / config.env.board_size + x1
+        x2_teleport = 1 - 1 / config.env.board_size + x
         dx = min(x - x1, x1_teleport - x, x2_teleport - x1)
         dy = min(y - y1, y1_teleport - y, y2_teleport - y1)
     return distance_reward_prey(dx, dy) if agent_type == "prey" else distance_reward_predator(dx, dy)
@@ -108,8 +108,8 @@ def distance_reward_prey(dx, dy):
     Returns: Reward = $1 - \exp(-c \cdot d^2)$
     """
     distance = np.linalg.norm([dx, dy])
-    rw = np.exp(-config.reward.coef_distance_reward * distance * distance)
-    return 1 - rw, distance
+    rw = 1 - 2 * np.exp(-config.reward.coef_distance_reward_prey * distance * distance)
+    return rw, distance
 
 
 def distance_reward_predator(dx, dy):
@@ -117,5 +117,5 @@ def distance_reward_predator(dx, dy):
     Returns: Reward = $\exp(-c \cdot d^2)$
     """
     distance = np.linalg.norm([dx, dy])
-    rw = np.exp(-config.reward.coef_distance_reward * distance * distance)
+    rw = np.exp(-config.reward.coef_distance_reward_predator * distance * distance)
     return rw, distance
