@@ -114,7 +114,7 @@ for episode in range(config.learning.n_episodes):
 
 
             for k in range(len(agents)):
-                loss = agents[k].learn_critic(all_batch, target_policies)
+                loss = agents[k].learn_critic(all_batch, target_policies, k)
                 actor_loss = agents[k].learn_policy(all_batch, k, policies)
                 metrics[k].add_loss(loss)
                 states = next_states

@@ -13,7 +13,7 @@ class ActorNetwork(nn.Module):
     def __init__(self):
         super(ActorNetwork, self).__init__()
         self.n_agents = config.agents.number_preys + config.agents.number_predators
-        state_dim = 4 * self.n_agents
+        state_dim = 6 * self.n_agents
         output_size = 7 if config.env.world_3D else 5
         self.fc1 = nn.Linear(state_dim, 3*self.n_agents)
         self.fc2 = nn.Linear(3*self.n_agents, 2*self.n_agents)

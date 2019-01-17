@@ -524,7 +524,8 @@ class AgentMADDPG(Agent):
 
         torch.save(save_dict, name)
 
-    def learn_critic(self, batch, target_policies):
+
+    def learn_critic(self, batch, target_policies, idx):
         """
 
         :param batch:
@@ -539,9 +540,16 @@ class AgentMADDPG(Agent):
 
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         batch_size = config.learning.batch_size
-        all_trgt_acs = torch.cat([(pi(nobs)).max(1)[1] for pi, nobs in
-                                  zip(target_policies, next_state_batch)], 0).reshape(self.n_agents, batch_size)
 
+        res = []
+        for num, pi, nobs in zip(range(self.n_agents), target_policies, next_state_batch):
+            if num != idx:
+                with torch.no_grad():
+                    res.append(pi(nobs).max(1)[1])
+            else:
+                res.append(pi(nobs).max(1)[1])
+
+        all_trgt_acs = torch.cat(res, 0).reshape(self.n_agents, batch_size)
         next_state_batch = next_state_batch.transpose(0, 1)
         all_trgt_acs = all_trgt_acs.transpose(0, 1)
         all_trgt_acs = all_trgt_acs.unsqueeze(2)
@@ -578,11 +586,13 @@ class AgentMADDPG(Agent):
             action = curr_pol_out.max(1)[1].unsqueeze(1)
 
         all_pol_acs = []
-        for i, pi, ob in zip(range(self.n_agents), policies, state_batch):
-            if i == idx:
+        for num, pi, ob in zip(range(self.n_agents), policies, state_batch):
+            if num == idx:
                 all_pol_acs.append(action.squeeze(1))
             else:
-                all_pol_acs.append(pi(ob).max(1)[1])
+                with torch.no_grad():
+                    all_pol_acs.append(pi(ob).max(1)[1])
+
         all_pol_acs = torch.cat(all_pol_acs, 0).reshape(self.n_agents, batch_size)
         all_pol_acs = all_pol_acs.transpose(0, 1)
         state_batch = state_batch.transpose(0, 1)
