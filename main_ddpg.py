@@ -62,6 +62,7 @@ fig_losses_returns, (ax_losses, ax_returns) = plt.subplots(1, 2)
 plt.show()
 
 start = time.time()
+path_figure_episode = None
 for episode in range(config.learning.n_episodes):
     test_step = False
     if not episode % config.learning.plot_episodes_every:
@@ -72,6 +73,7 @@ for episode in range(config.learning.n_episodes):
     all_rewards = []
     states = env.reset()
     terminal = False
+    step_k = 0
     while not terminal:
         actions = []
         for i in range(len(agents)):
@@ -90,8 +92,11 @@ for episode in range(config.learning.n_episodes):
             plt.draw()
             if not episode % config.learning.save_episodes_every:
                 fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(step_k)))
+                fig_losses_returns.savefig(os.path.join(path_figure, "losses.jpg"))
             if not episode % config.learning.plot_episodes_every:
                 plt.pause(0.001)
+
+        step_k += 1
 
         # Learning Step
         for k in range(len(agents)):

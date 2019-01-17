@@ -87,6 +87,7 @@ for episode in range(config.learning.n_episodes):
             plt.draw()
             if not episode % config.learning.save_episodes_every:
                 fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(step_k)))
+                fig_losses_returns.savefig(os.path.join(path_figure, "losses.jpg"))
             if not episode % config.learning.plot_episodes_every:
                 plt.pause(0.001)
 
