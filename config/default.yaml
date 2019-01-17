@@ -32,6 +32,7 @@ env:
 learning:
   cuda: Yes # cuda or cpu
   n_episodes: 500000 # Number of episodes
+  batch_size: 200
   save_folder: ./builds/
   DDQN: Yes
   tau: 0.01
