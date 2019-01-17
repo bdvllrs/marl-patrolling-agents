@@ -18,7 +18,9 @@ device = torch.device(device_type)
 print("Using", device_type)
 
 model_path = os.path.abspath(config.learning.save_folder + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+path_figure = os.path.abspath('figs/' + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 os.makedirs(model_path)
+os.makedirs(path_figure)
 
 number_agents = config.agents.number_predators + config.agents.number_preys
 # Definition of the agents
@@ -64,6 +66,9 @@ for episode in range(config.learning.n_episodes):
     test_step = False
     if not episode % config.learning.plot_episodes_every:
         test_step = True
+    if not episode % config.learning.save_episodes_every:
+        path_figure_episode = os.path.join(path_figure, "episode-{}".format(episode))
+        os.mkdir(path_figure_episode)
     all_rewards = []
     states = env.reset()
     terminal = False
@@ -83,7 +88,10 @@ for episode in range(config.learning.n_episodes):
             ax_board.cla()
             env.plot(states, rewards, ax_board)
             plt.draw()
-            plt.pause(0.01)
+            if not episode % config.learning.save_episodes_every:
+                fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(step_k)))
+            if not episode % config.learning.plot_episodes_every:
+                plt.pause(0.001)
 
         # Learning Step
         for k in range(len(agents)):
