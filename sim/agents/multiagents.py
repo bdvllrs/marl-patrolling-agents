@@ -219,8 +219,6 @@ class AgentMADDPG(Agent):
 
         self.critic_optimizer.step()
 
-        self.soft_update(self.target_critic, self.policy_critic)
-
         return loss.detach().cpu().item()
 
     def learn_actor(self, batch, actors, idx):
@@ -261,7 +259,7 @@ class AgentMADDPG(Agent):
 
         self.actor_optimizer.step()
         self.soft_update(self.target_actor, self.policy_actor)
-
+        self.soft_update(self.target_critic, self.policy_critic)
         return pol_loss.detach().cpu().item()
 
 
