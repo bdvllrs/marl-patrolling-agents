@@ -108,13 +108,13 @@ class Env:
                 position = position[0], index_y, position[2]
             if position[2] < 0 or position[2] >= len(self.possible_location_values):
                 position = position[0], position[1], index_z
-            if (position[0], position[1]) in self.obstacles:
-                position = index_x, index_y, index_z
         else:
             # If infinite world, goes back to the other side
             position = (position[0] % len(self.possible_location_values),
                         position[1] % len(self.possible_location_values),
                         position[2] % len(self.possible_location_values))
+        if [position[0], position[1]] in self.obstacles:
+            position = index_x, index_y, index_z
 
         return (self.possible_location_values[position[0]], self.possible_location_values[position[1]],
                 self.possible_location_values[position[2]])
