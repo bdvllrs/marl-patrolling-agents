@@ -27,11 +27,12 @@ env:
   world_3D: Yes # If Yes, world is 3D
   infinite_world: No # If Yes, transported to the other side of the board when crossing border.
 
-  state_image: No # If No, state i
+  state_image: No # If No, state is coordinate, else state is an image
 
 learning:
   cuda: Yes # cuda or cpu
   n_episodes: 500000 # Number of episodes
+  batch_size: 200
   save_folder: ./builds/
   DDQN: Yes
   tau: 0.01

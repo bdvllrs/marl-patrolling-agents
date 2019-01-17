@@ -101,6 +101,7 @@ class Env:
                 self.possible_location_values[position[2]])
 
     def _get_state_from_positions(self, positions):
+        # return positions
         states = []
         for k in range(len(self.agents)):
             relative_positions = []

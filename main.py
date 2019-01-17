@@ -53,6 +53,7 @@ if config.env.world_3D:
 else:
     ax_board = fig_board.gca()
 
+
 fig_losses_returns, (ax_losses, ax_returns) = plt.subplots(1, 2)
 
 plt.show()
