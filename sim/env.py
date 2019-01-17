@@ -1,4 +1,9 @@
 from typing import List
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import mpl_toolkits.mplot3d.art3d as art3d
+import numpy as np
 from sim.rewards import reward_full
 from sim.agents import Agent
 import random
@@ -22,6 +27,13 @@ class Env:
         self.infinite_world = env_config.infinite_world
         self.config = config
 
+        self.obstacles = env_config.obstacles
+
+        self.obstacle_positions = []
+        for (x, y) in self.obstacles:
+            self.obstacle_positions.append(self.possible_location_values[x])
+            self.obstacle_positions.append(self.possible_location_values[y])
+
         self.agents = []
         self.initial_positions = []
 
@@ -32,7 +44,10 @@ class Env:
             position: If None, random position at each new episode.
         """
         assert position is None or (0 <= position[0] < 1 and 0 <= position[1] < 1), "Initial position is incorrect."
-        assert (position is None or len(position) == 3) or not self.config.env.world_3D, "Please provide 3D positions if use 3D world."
+        if self.config.env.world_3D:
+            assert position is None or len(position) == 3, "Please provide 3D positions if use 3D world."
+        if position is not None:
+            assert position not in self.obstacles, "Initial position in an obstacle"
         if position is not None:
             x, y = self.possible_location_values[-1], self.possible_location_values[-1]
             z = position[2] if len(position) == 3 else 0
@@ -48,8 +63,10 @@ class Env:
         self.initial_positions.append(position)
 
     def _get_random_position(self):
-        x = random.sample(self.possible_location_values, 1)[0]
-        y = random.sample(self.possible_location_values, 1)[0]
+        possible_values = [(x, y) for x in range(self.board_size)
+                           for y in range(self.board_size) if (x, y) not in self.obstacles]
+        x, y = random.sample(possible_values, 1)[0]
+        x, y = self.possible_location_values[x], self.possible_location_values[y]
         z = self.possible_location_values[0]
         if self.config.env.world_3D:
             z = random.sample(self.possible_location_values, 1)[0]
@@ -96,6 +113,8 @@ class Env:
             position = (position[0] % len(self.possible_location_values),
                         position[1] % len(self.possible_location_values),
                         position[2] % len(self.possible_location_values))
+        if [position[0], position[1]] in self.obstacles:
+            position = index_x, index_y, index_z
 
         return (self.possible_location_values[position[0]], self.possible_location_values[position[1]],
                 self.possible_location_values[position[2]])
@@ -118,6 +137,7 @@ class Env:
                 relative_positions.append(z - z_other)
             state = positions[:]
             state.extend(relative_positions)
+            # state.extend(self.obstacle_positions)
             states.append(state)
         return states
 
@@ -133,19 +153,24 @@ class Env:
         index_z = self.possible_location_values.index(current_position[2])
         max_len = len(self.possible_location_values)
         indexes = [(index_x, index_y, index_z)]
-        if self.infinite_world or index_x > 0:
-            indexes.append(((index_x - 1) % max_len, index_y % max_len, index_z % max_len))  # Left
-        if self.infinite_world or index_x < len(self.possible_location_values) - 1:  # Right
-            indexes.append(((index_x + 1) % max_len, index_y % max_len, index_z % max_len))
-        if self.infinite_world or index_y > 0:  # Back
-            indexes.append((index_x % max_len, (index_y - 1) % max_len, index_z % max_len))
-        if self.infinite_world or index_y < len(self.possible_location_values) - 1:  # Front
-            indexes.append((index_x % max_len, (index_y + 1) % max_len, index_z % max_len))
+        if (self.infinite_world or index_x > 0) and ((index_x - 1) % max_len, index_y) not in self.obstacles:
+            indexes.append(((index_x - 1) % max_len, index_y, index_z))  # Left
+        if (self.infinite_world or index_x < len(self.possible_location_values) - 1) and (
+                ((index_x + 1) % max_len, index_y) not in self.obstacles):  # Right
+            indexes.append(((index_x + 1) % max_len, index_y, index_z))
+        if (self.infinite_world or index_y > 0) and (
+                (index_x, (index_y - 1) % max_len) not in self.obstacles):  # Back
+            indexes.append((index_x, (index_y - 1) % max_len, index_z))
+        if (self.infinite_world or index_y < len(self.possible_location_values) - 1) and (
+                (index_x, (index_y + 1) % max_len) not in self.obstacles):  # Front
+            indexes.append((index_x, (index_y + 1) % max_len, index_z))
         if self.config.env.world_3D:
-            if self.infinite_world or index_z < len(self.possible_location_values) - 1:  # Top
-                indexes.append((index_x % max_len, index_y % max_len, (index_z + 1) % max_len))
-            if self.infinite_world or index_z > 0:  # Bottom
-                indexes.append((index_x % max_len, index_y % max_len, (index_z - 1) % max_len))
+            if (self.infinite_world or index_z < len(self.possible_location_values) - 1) and (
+                    (index_x, index_y) not in self.obstacles):  # Top
+                indexes.append((index_x, index_y, (index_z + 1) % max_len))
+            if (self.infinite_world or index_z > 0) and (
+                    (index_x, index_y) not in self.obstacles):  # Bottom
+                indexes.append((index_x, index_y, (index_z - 1) % max_len))
         return indexes
 
     def reset(self):
@@ -198,6 +223,27 @@ class Env:
         return next_state, rewards, terminal
 
     def plot(self, state, rewards, ax):
+        # Add obstacles
+        tick_labels = np.arange(0, self.board_size)
+        ax.set_xticks(self.possible_location_values)
+        ax.set_yticks(self.possible_location_values)
+        ax.set_xticklabels(tick_labels)
+        ax.set_yticklabels(tick_labels)
+        ax.set_xlim(0, self.possible_location_values[-1])
+        ax.set_ylim(0, self.possible_location_values[-1])
+        if self.config.env.world_3D:
+            ax.set_zticks(self.possible_location_values)
+            ax.set_zticklabels(tick_labels)
+            ax.set_zlim(0, self.possible_location_values[-1])
+        ax.grid(which="major", alpha=0.5)
+        for x, y in self.obstacles:
+            x, y = self.possible_location_values[x], self.possible_location_values[y]
+            side = self.possible_location_values[1]
+            block = plt.Rectangle((x - side / 2, y - side / 2), width=side, height=side, linewidth=0, color="black")
+            ax.add_patch(block)
+            if self.config.env.world_3D:
+                art3d.pathpatch_2d_to_3d(block, z=0)
+
         for k in range(len(self.agents)):
             if self.config.env.world_3D:
                 position = state[0][3 * k], state[0][3 * k + 1], state[0][3 * k + 2]
