@@ -1,12 +1,11 @@
 import os
-
 from datetime import datetime
 import time
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import torch
 import numpy as np
-from sim import Env, AgentDQN, ReplayMemory
+from sim import Env, ReplayMemory, AgentMADQN
 from utils import Config, Metrics, compute_discounted_return
 
 plt.ion()
@@ -23,18 +22,16 @@ os.makedirs(model_path)
 
 number_agents = config.agents.number_predators + config.agents.number_preys
 # Definition of the agents
-agents = [AgentDQN("predator", "predator-{}".format(k), device, config.agents)
+agents = [AgentMADQN("predator", "predator-{}".format(k), device, config.agents)
           for k in range(config.agents.number_predators)]
-agents += [AgentDQN("prey", "prey-{}".format(k), device, config.agents)
+agents += [AgentMADQN("prey", "prey-{}".format(k), device, config.agents)
            for k in range(config.agents.number_preys)]
 
 metrics = []
-
+actors_noise = []
 # Definition of the memories and set to device
 # Define the metrics for all agents
 for agent in agents:
-
-    agent.memory = ReplayMemory(config.replay_memory.size)
     metrics.append(Metrics())
 
     # If we have to load the pretrained model
@@ -43,9 +40,11 @@ for agent in agents:
         agent.load(path)
 
 env = Env(config.env, config)
+shared_memory = ReplayMemory(config.replay_memory.size)
+target_actors = [agents[k].target_actor for k in range(len(agents))]
 
 # Add agents to the environment
-for agent in agents:
+for idx, agent in enumerate(agents):
     env.add_agent(agent, position=None)
 
 fig_board = plt.figure(0)
@@ -53,7 +52,6 @@ if config.env.world_3D:
     ax_board = fig_board.gca(projection="3d")
 else:
     ax_board = fig_board.gca()
-
 
 fig_losses_returns, (ax_losses, ax_returns) = plt.subplots(1, 2)
 
@@ -68,28 +66,29 @@ for episode in range(config.learning.n_episodes):
     states = env.reset()
     terminal = False
     while not terminal:
-        actions = [agents[i].draw_action(states[i], no_exploration=test_step) for i in range(len(agents))]
+        actions = []
+        for i in range(len(agents)):
+            action = agents[i].draw_action(states, no_exploration=test_step)
+            actions.append(action)
         next_states, rewards, terminal = env.step(states, actions)
         all_rewards.append(rewards)
 
         if not episode % config.learning.plot_episodes_every:
             # Plot environment
             ax_board.cla()
-            env.plot(next_states, rewards, ax_board)
+            env.plot(states, rewards, ax_board)
             plt.draw()
-            plt.pause(0.001)
+            plt.pause(0.01)
 
-        # Learning Step
-        if not test_step:
+        shared_memory.add(states, next_states, actions, rewards)
+
+        # Learning step
+        # Get batch for learning (batch_size x n_agents x dim)
+        batch = shared_memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
+        if batch is not None:
             for k in range(len(agents)):
-                # Add to agent memory
-                agents[k].memory.add(states[k], next_states[k], actions[k], rewards[k])
-                # Get batch for learning
-                batch = agents[k].memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
-                # Learn
-                if batch is not None:
-                    loss = agents[k].learn(batch)
-                    metrics[k].add_loss(loss)
+                loss = agents[k].learn(batch, target_actors, k)
+                metrics[k].add_loss(loss)
 
         states = next_states
 
@@ -102,12 +101,11 @@ for episode in range(config.learning.n_episodes):
     # Plot learning curves
     if not episode % config.learning.plot_curves_every:
         print("Episode", episode)
-        print("Time :", time.time()-start)
+        print("Time :", time.time() - start)
 
         ax_losses.cla()
         ax_returns.cla()
         for k in range(len(agents)):
-            # Compute average of losses of all learning step in episode and add it to the list of losses
             metrics[k].compute_averages()
 
             metrics[k].plot_losses(episode, ax_losses, legend=agents[k].id)

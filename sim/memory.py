@@ -49,8 +49,9 @@ class ReplayMemory:
             np.random.shuffle(permutation)
         batch_mask = permutation[-batch_size:]
 
-        state_batch = [self.internal_memory["states"][k] for k in batch_mask]
-        next_state_batch = [self.internal_memory["next_states"][k] for k in batch_mask]
-        action_batch = [self.internal_memory["actions"][k] for k in batch_mask]
-        reward_batch = [self.internal_memory["rewards"][k] for k in batch_mask]
+        state_batch = np.array([self.internal_memory["states"][k] for k in batch_mask])
+        next_state_batch = np.array([self.internal_memory["next_states"][k] for k in batch_mask])
+        action_batch = np.array([self.internal_memory["actions"][k] for k in batch_mask])
+        reward_batch = np.array([self.internal_memory["rewards"][k] for k in batch_mask])
         return state_batch, next_state_batch, action_batch, reward_batch
+

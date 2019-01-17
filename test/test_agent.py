@@ -1,6 +1,6 @@
 import unittest
 import torch
-from model.DQN import DQNUnit
+from model.dqn import DQNUnit
 from utils.config import Config
 config = Config('./builds')
 
