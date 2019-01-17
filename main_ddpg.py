@@ -71,7 +71,10 @@ for episode in range(config.learning.n_episodes):
         actions = []
         for i in range(len(agents)):
             action = agents[i].draw_action(states[i], no_exploration=test_step)
-            actions.append(action[0])
+            if type(action) == int:
+                actions.append(action)
+            else:
+                actions.append(action[0])
         next_states, rewards, terminal = env.step(states, actions)
         all_rewards.append(rewards)
 
