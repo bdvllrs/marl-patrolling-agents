@@ -20,7 +20,8 @@ device = torch.device(device_type)
 print("Using", device_type)
 
 model_path = os.path.abspath(config.learning.save_folder + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-path_figure = os.path.abspath('figs/' + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+model_path = os.path.abspath(config.learning.save_folder + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S') + "/models")
+path_figure = os.path.abspath(config.learning.save_folder + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S') + "/figs")
 os.makedirs(model_path)
 os.makedirs(path_figure)
 
@@ -87,6 +88,7 @@ for episode in range(config.learning.n_episodes):
             plt.draw()
             if not episode % config.learning.save_episodes_every:
                 fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(step_k)))
+                fig_losses_returns.savefig(os.path.join(path_figure, "losses.eps"), dpi=1000, format="eps")
             if not episode % config.learning.plot_episodes_every:
                 plt.pause(0.001)
 

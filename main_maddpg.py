@@ -13,8 +13,15 @@ plt.ion()
 
 config = Config('config/')
 
+
 device_type = "cuda" if torch.cuda.is_available() and config.learning.cuda else "cpu"
 device = torch.device(device_type)
+
+model_path = os.path.abspath(config.learning.save_folder + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+model_path = os.path.abspath(config.learning.save_folder + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S') + "/models")
+path_figure = os.path.abspath(config.learning.save_folder + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S') + "/figs")
+os.makedirs(model_path)
+os.makedirs(path_figure)
 
 print("Using", device_type)
 
@@ -59,13 +66,18 @@ fig_losses_returns, (ax_losses, ax_losses_actor, ax_returns) = plt.subplots(1, 3
 plt.show()
 
 start = time.time()
+path_figure_episode = None
 for episode in range(config.learning.n_episodes):
     test_step = False
     if not episode % config.learning.plot_episodes_every:
         test_step = True
+    if not episode % config.learning.save_episodes_every:
+        path_figure_episode = os.path.join(path_figure, "episode-{}".format(episode))
+        os.mkdir(path_figure_episode)
     all_rewards = []
     states = env.reset()
     terminal = False
+    step_k = 0
     while not terminal:
         actions = []
         for i in range(len(agents)):
@@ -79,7 +91,13 @@ for episode in range(config.learning.n_episodes):
             ax_board.cla()
             env.plot(states, rewards, ax_board)
             plt.draw()
-            plt.pause(0.01)
+            if not episode % config.learning.save_episodes_every:
+                fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(step_k)))
+                fig_losses_returns.savefig(os.path.join(path_figure, "losses.eps"), dpi=1000, format="eps")
+            if not episode % config.learning.plot_episodes_every:
+                plt.pause(0.001)
+
+        step_k += 1
 
         shared_memory.add(states, next_states, actions, rewards)
 
