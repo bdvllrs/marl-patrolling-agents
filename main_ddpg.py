@@ -61,13 +61,16 @@ plt.show()
 
 start = time.time()
 for episode in range(config.learning.n_episodes):
+    test_step = False
+    if not episode % config.learning.plot_episodes_every:
+        test_step = True
     all_rewards = []
     states = env.reset()
     terminal = False
     while not terminal:
         actions = []
         for i in range(len(agents)):
-            action = agents[i].draw_action(states[i])
+            action = agents[i].draw_action(states[i], no_exploration=test_step)
             actions.append(action[0])
         next_states, rewards, terminal = env.step(states, actions)
         all_rewards.append(rewards)
@@ -107,14 +110,12 @@ for episode in range(config.learning.n_episodes):
         ax_losses.cla()
         ax_returns.cla()
         for k in range(len(agents)):
-            # Compute average of losses of all learning step in episode and add it to the list of losses
             metrics[k].compute_averages()
 
-            metrics[k].plot_losses(ax_losses, legend=agents[k].id)
-            metrics[k].plot_returns(ax_returns, legend=agents[k].id)
-        plt.legend()
-        plt.draw()
-        plt.pause(0.0001)
+            metrics[k].plot_losses(episode, ax_losses, legend=agents[k].id)
+            metrics[k].plot_returns(episode, ax_returns, legend=agents[k].id)
+            ax_losses.set_title("Losses")
+            ax_returns.set_title("Returns")
 
     # Save models
     for agent in agents:
