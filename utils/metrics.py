@@ -5,17 +5,22 @@ class Metrics:
     def __init__(self):
         self.data = {
             "losses": [],
+            "loss_actor":[],
             "returns": []
         }
 
         self.loss_buffer = []
         self.returns_buffer = []
+        self.loss_actor = []
 
     def add_return(self, value):
         self.returns_buffer.append(value)
 
     def add_loss(self, value):
         self.loss_buffer.append(value)
+
+    def add_loss_actor(self, value):
+        self.loss_actor.append(value)
 
     def compute_averages(self):
         if self.loss_buffer:
@@ -24,6 +29,9 @@ class Metrics:
         if self.returns_buffer:
             self.data["returns"].append(np.mean(self.returns_buffer))
             self.returns_buffer = []
+        if self.loss_actor:
+            self.data["loss_actor"].append(np.mean(self.loss_actor))
+            self.loss_actor = []
 
     def plot(self, key, episode, ax, legend):
         x = np.linspace(0, episode, len(self.data[key]))
@@ -34,3 +42,6 @@ class Metrics:
 
     def plot_losses(self, episode, ax, legend):
         self.plot("losses", episode, ax, legend)
+
+    def plot_losses_actor(self, episode, ax, legend):
+        self.plot("loss_actor", episode, ax, legend)

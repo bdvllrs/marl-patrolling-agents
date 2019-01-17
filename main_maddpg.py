@@ -2,9 +2,7 @@ import os
 from datetime import datetime
 import time
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import torch
-import numpy as np
 from sim import Env, ReplayMemory, AgentMADDPG
 from utils import Config, Metrics, compute_discounted_return
 
@@ -53,7 +51,7 @@ if config.env.world_3D:
 else:
     ax_board = fig_board.gca()
 
-fig_losses_returns, (ax_losses, ax_returns) = plt.subplots(1, 2)
+fig_losses_returns, (ax_losses, ax_losses_actor, ax_returns) = plt.subplots(1, 3)
 
 plt.show()
 
@@ -90,6 +88,7 @@ for episode in range(config.learning.n_episodes):
                 loss_critic = agents[k].learn_critic(batch, target_actors, k)
                 loss_actor = agents[k].learn_actor(batch, actors, k)
                 metrics[k].add_loss(loss_critic)
+                metrics[k].add_loss_actor(loss_actor)
 
         states = next_states
 
@@ -103,16 +102,18 @@ for episode in range(config.learning.n_episodes):
     if not episode % config.learning.plot_curves_every:
         print("Episode", episode)
         print("Time :", time.time() - start)
-
         ax_losses.cla()
         ax_returns.cla()
+        ax_losses_actor.cla()
         for k in range(len(agents)):
             metrics[k].compute_averages()
 
             metrics[k].plot_losses(episode, ax_losses, legend=agents[k].id)
             metrics[k].plot_returns(episode, ax_returns, legend=agents[k].id)
-            ax_losses.set_title("Losses")
+            metrics[k].plot_losses_actor(episode, ax_losses_actor, legend=agents[k].id)
+            ax_losses.set_title("Losses critic")
             ax_returns.set_title("Returns")
+            ax_losses_actor.set_title("Losses actor")
         plt.legend()
         plt.draw()
         plt.pause(0.0001)
