@@ -5,11 +5,11 @@ import torch
 config = Config('./config')
 
 
-
 class ActorNetwork(nn.Module):
     """
     A network for actor
     """
+
     def __init__(self):
         super(ActorNetwork, self).__init__()
         self.n_agents = config.agents.number_preys + config.agents.number_predators
@@ -33,13 +33,14 @@ class CriticNetwork(nn.Module):
     """
     A network for critic
     """
+
     def __init__(self, dim_concat, output_size=1):
         super(CriticNetwork, self).__init__()
         self.dim_concat = dim_concat
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         hidden_size = config.agents.hidden_size
-        state_dim = 4 * self.n_agents
-        action_dim  = 1
+        state_dim = 2 * 3 * self.n_agents
+        action_dim = 1
         self.fc1 = nn.Linear(state_dim, hidden_size)
         self.fc2 = nn.Linear(hidden_size + action_dim, hidden_size)
         self.fc3 = nn.Linear(hidden_size, output_size)
