@@ -202,4 +202,5 @@ class Env:
                 position = state[0][3 * k], state[0][3 * k + 1], state[0][3 * k + 2]
             else:
                 position = state[0][3 * k], state[0][3 * k + 1]
-            self.agents[k].plot(position, rewards[k], self.plot_radius, ax)
+            radius = self.config.env.plot_radius_3D if self.config.env.world_3D else self.plot_radius
+            self.agents[k].plot(position, rewards[k], radius, ax)

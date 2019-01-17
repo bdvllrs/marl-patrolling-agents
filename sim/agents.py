@@ -64,7 +64,7 @@ class Agent:
             ax.text(x - radius/2, y-0.05, "Reward: {}".format(round(reward, 3)))
         else:  # 3D
             x, y, z = position
-            ax.scatter(x, y, z, s=100, c=self.colors[self.type], marker="o")
+            ax.scatter(x, y, z, s=radius, c=self.colors[self.type], marker="o")
             ax.text(x - radius/2, y, z, self.id)
             ax.text(x - radius/2, y-0.1, z, "Reward: {}".format(round(reward, 3)))
 
