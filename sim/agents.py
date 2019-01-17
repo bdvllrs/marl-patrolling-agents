@@ -10,7 +10,7 @@ from utils.config import Config
 import torch.nn.functional as F
 import math
 
-from utils.misc import onehot_from_logits, gumbel_softmax
+from utils.misc import gumbel_softmax
 
 config = Config('./config')
 
@@ -197,7 +197,8 @@ class AgentDDPG(Agent):
 
         self.update(self.target_policy, self.policy_net)
         self.update(self.target_critic, self.critic_net)
-        self.n_iter =0
+        self.n_iter = 0
+        self.steps_done = 0
 
 
 
@@ -213,12 +214,21 @@ class AgentDDPG(Agent):
 
 
     def draw_action(self, state, no_exploration):
+        eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
+                                       math.exp(-1. * self.steps_done / self.EPS_DECAY)
+        self.steps_done += 1
         with torch.no_grad():
+            p = np.random.random()
             state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
-            if no_exploration:
+            if no_exploration or p > eps_threshold:
                 action = self.policy_net(state).max(1)[1].detach().cpu().numpy()
-            else:
+            elif config.learning.gumbel_softmax:
                 action = gumbel_softmax(self.policy_net(state), hard=True).max(1)[1].detach().cpu().numpy()
+            else:
+                action = random.randrange(self.number_actions)
+
+
+
         return action
 
     def load(self, name):
@@ -271,7 +281,8 @@ class AgentDDPG(Agent):
         actual_value = self.critic_net(state_batch, action_batch.unsqueeze(1))
         loss = F.mse_loss(actual_value, target_value.detach())
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.critic_net.parameters(), 0.5)
+        for param in self.critic_net.parameters():
+            param.grad.data.clamp_(-1, 1)
         self.critic_optimizer.step()
 
         return loss.detach().cpu().item()
@@ -291,7 +302,11 @@ class AgentDDPG(Agent):
         self.policy_optimizer.zero_grad()
 
         curr_pol_out = self.policy_net(state_batch)
-        action = gumbel_softmax(curr_pol_out, hard=True).max(1)[1].unsqueeze(1)
+
+        if config.learning.gumbel_softmax:
+            action = gumbel_softmax(curr_pol_out, hard=True).max(1)[1].unsqueeze(1)
+        else:
+            action = curr_pol_out.max(1)[1].unsqueeze(1)
 
         #action = self.policy_net(state_batch).max(1)[1].unsqueeze(1)
         # actor_loss is used to maximize the Q value for the predicted action
@@ -299,9 +314,9 @@ class AgentDDPG(Agent):
         actor_loss = actor_loss.mean()
         actor_loss += (curr_pol_out ** 2).mean() * 1e-3
         actor_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), 0.5)
+        for param in self.policy_net.parameters():
+            param.grad.data.clamp_(-1, 1)
         self.policy_optimizer.step()
-
         # update actor target network and critic target network
         if not self.n_iter % self.update_frequency:
             self.soft_update(self.target_critic, self.critic_net)
@@ -326,6 +341,7 @@ class AgentMADDPG(Agent):
         self.update(self.target_policy, self.policy_net)
         self.update(self.target_critic, self.critic_net)
         self.n_iter =0
+        self.steps_done = 0
 
 
 
@@ -341,13 +357,21 @@ class AgentMADDPG(Agent):
 
 
     def draw_action(self, state, no_exploration):
+        eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
+                                       math.exp(-1. * self.steps_done / self.EPS_DECAY)
+        self.steps_done += 1
         with torch.no_grad():
+            p = np.random.random()
             state = torch.tensor(state).to(self.device).unsqueeze(dim=0)
-            if no_exploration:
+            if no_exploration or p > eps_threshold:
                 action = self.policy_net(state).max(1)[1].detach().cpu().numpy()
-            else:
+            elif config.learning.gumbel_softmax:
                 action = gumbel_softmax(self.policy_net(state), hard=True).max(1)[1].detach().cpu().numpy()
+            else:
+                action = random.randrange(self.number_actions)
         return action
+
+
 
     def load(self, name):
         """
@@ -393,7 +417,7 @@ class AgentMADDPG(Agent):
         reward_batch = torch.FloatTensor(reward_batch, device=self.device)
         self.critic_optimizer.zero_grad()
 
-        self.n_agents = config.agents.number_preys+config.agents.number_predators
+        self.n_agents = config.agents.number_preys + config.agents.number_predators
         batch_size = config.learning.batch_size
         all_trgt_acs = torch.cat( [(pi(nobs)).max(1)[1] for pi, nobs in
                         zip(target_policies, next_state_batch)] , 0).reshape(self.n_agents, batch_size)
@@ -430,7 +454,13 @@ class AgentMADDPG(Agent):
 
         batch_size = config.learning.batch_size
 
-        action = gumbel_softmax(self.policy_net(state_batch[idx]), hard=True).max(1)[1].unsqueeze(1)
+        curr_pol_out = self.policy_net(state_batch[idx])
+
+        if config.learning.gumbel_softmax:
+            action = gumbel_softmax(curr_pol_out, hard=True).max(1)[1].unsqueeze(1)
+        else:
+            action = curr_pol_out.max(1)[1].unsqueeze(1)
+
 
 
         all_pol_acs = []

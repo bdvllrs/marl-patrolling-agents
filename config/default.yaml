@@ -27,11 +27,11 @@ env:
 
 learning:
   cuda: Yes # cuda or cpu
-  batch_size: 148
   n_episodes: 500000 # Number of episodes
   save_folder: ./builds/
   DDQN: Yes
   tau: 0.01
+  gumbel_softmax: No
 
   plot_episodes_every: 100
   plot_curves_every: 100
