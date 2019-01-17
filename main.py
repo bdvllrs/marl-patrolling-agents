@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import torch
 import numpy as np
-from sim import Env, AgentDQN, ReplayMemory
+from sim import Env, ReplayMemory
+from sim.agents.agents import AgentDQN
 from utils import Config, Metrics, compute_discounted_return
 
 plt.ion()
