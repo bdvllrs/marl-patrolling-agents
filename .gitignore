@@ -5,3 +5,4 @@ __pycache__/
 builds/
 config/*
 !config/default.yaml
+figs/

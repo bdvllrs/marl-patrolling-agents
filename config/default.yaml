@@ -29,6 +29,10 @@ env:
 
   state_image: No # If No, state is coordinate, else state is an image
 
+  obstacles: [[3, 2], [3, 3], [3, 4], [3, 5], [4, 5], [5, 5], [6, 5], [6, 4], [6, 3], [6, 2],
+              [8, 14], [8, 13], [8, 12], [8, 11], [8, 10], [8, 9], [8, 8], [8, 7], [9, 7], [10, 7], [11, 7],
+              [11, 12], [11, 11], [11, 10], [12, 10], [13, 10], [14, 10]]
+
 learning:
   cuda: Yes # cuda or cpu
   n_episodes: 500000 # Number of episodes
@@ -39,6 +43,7 @@ learning:
   gumbel_softmax: No
 
   plot_episodes_every: 100
+  save_episodes_every: 100
   plot_curves_every: 100
 
   use_model: No # If we load a trained model

@@ -65,8 +65,6 @@ class Agent:
             ax.add_artist(circle)
             ax.text(x - radius / 2, y, self.id)
             ax.text(x - radius / 2, y - 0.05, "Reward: {}".format(round(reward, 3)))
-            ax.set_xlim(0, 1)
-            ax.set_ylim(0, 1)
         else:  # 3D
             x, y, z = position
             ax.scatter(x, y, z, s=radius, c=self.colors[self.type], marker="o")
