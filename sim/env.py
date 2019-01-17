@@ -137,7 +137,7 @@ class Env:
                 relative_positions.append(z - z_other)
             state = positions[:]
             state.extend(relative_positions)
-            # state.extend(self.obstacle_positions)
+            state.extend(self.obstacle_positions)
             states.append(state)
         return states
 
