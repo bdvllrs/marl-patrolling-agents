@@ -1,13 +1,12 @@
 agents:
   number_preys: 1
-  number_predators: 2
+  number_predators: 3
   # For RL
   gamma: 0.9 # Discount factor.
   EPS_START: 0.9 # Probability of exploration.
   EPS_END: 0.1
   EPS_DECAY: 500000
   lr: 0.01 # Learning rate
-  number_actions: 5 # Must be 5 [none, top, left, right, bottom] or 9 with corners added.
   update_frequency: 20 # Update the target net every...
   update_type: hard # Type of update.
   hidden_size: 32
@@ -21,9 +20,14 @@ env:
   reward_type: full # Must be between full and sparse.
   board_size: 15 # Size of the board
   max_iterations: 50 # Number maximum of steps
-  plot_radius: 0.1
+  plot_radius: 0.05
 
+  plot_radius_3D: 50 # In point
+
+  world_3D: Yes # If Yes, world is 3D
   infinite_world: No # If Yes, transported to the other side of the board when crossing border.
+
+  state_image: No # If No, state i
 
 learning:
   cuda: Yes # cuda or cpu
@@ -42,7 +46,7 @@ learning:
 reward:
   coef_distance_reward_predator: 5
   coef_distance_reward_prey: 5
-  hot_walls: Yes # If Yes, agents will lose reward if they are against the wall.
+  hot_walls: No # If Yes, agents will lose reward if they are against the wall.
 
   share_wins_among_predators: No # If one predator wins, other predator also get some reward
-  reward_if_predators_win: 0.8 # If share_wins_among_predator is Yes, how many reward to give to the other predators (in [-1, 1])
+  reward_if_predators_win: 0.4 # If share_wins_among_predator is Yes, how many reward to give to the other predators (in [-1, 1])

@@ -30,7 +30,7 @@ class Agent:
         self.type = type
         self.id = agent_id
         self.memory = None
-        self.number_actions = agent_config.number_actions
+        self.number_actions = 7 if config.env.world_3D else 5
 
         # For RL
         self.gamma = agent_config.gamma
@@ -56,11 +56,16 @@ class Agent:
             self.soft_update(*params)
 
     def plot(self, position, reward, radius, ax: plt.Axes):
-        x, y = position
-        circle = plt.Circle((x, y), radius=radius, color=self.colors[self.type])
-        ax.add_artist(circle)
-        ax.text(x - radius/2, y, self.id)
-        ax.text(x - radius/2, y-0.05, "Reward: {}".format(round(reward, 3)))
+        if len(position) == 2:
+            x, y = position
+            circle = plt.Circle((x, y), radius=radius, color=self.colors[self.type])
+            ax.add_artist(circle)
+            ax.text(x - radius/2, y, self.id)
+            ax.text(x - radius/2, y-0.05, "Reward: {}".format(round(reward, 3)))
+        else:  # 3D
+            x, y, z = position
+            ax.scatter(x, y, z, s=radius, c=self.colors[self.type], marker="o")
+            ax.text(x, y, z, self.id + "(r = {})".format(round(reward, 3)))
 
     def soft_update(self, *params):
         raise NotImplementedError
