@@ -24,7 +24,7 @@ env:
 
   plot_radius_3D: 50 # In point
 
-  world_3D: Yes # If Yes, world is 3D
+  world_3D: No # If Yes, world is 3D
   infinite_world: No # If Yes, transported to the other side of the board when crossing border.
 
   state_image: No # If No, state is coordinate, else state is an image

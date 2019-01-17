@@ -173,7 +173,7 @@ class AgentDQN(Agent):
             Qsa_prime_targets = self.target_net(next_state_batch).gather(1, actions_next)
 
         else:
-            Qsa_prime_targets = self.target_net(next_state_batch).detach().max(1)[0]
+            Qsa_prime_targets = self.target_net(next_state_batch).detach().max(1)[0].unsqueeze(1)
 
         actions_by_cal = reward_batch + (self.gamma * Qsa_prime_targets)
 
