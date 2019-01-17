@@ -29,5 +29,5 @@ def get_enemy_positions(agent_index: int, agents: List, positions: List[float]) 
     """
     for k in range(len(agents)):
         if agents[k].type != agents[agent_index].type:
-            x, y = positions[2 * k], positions[2 * k + 1]
-            yield (x, y)
+            x, y, z = positions[3 * k], positions[3 * k + 1], positions[3 * k + 2]
+            yield (x, y, z)

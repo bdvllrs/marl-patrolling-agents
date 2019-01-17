@@ -12,6 +12,7 @@ def reward_full(observations, agents: List[Agent], border_positions, t):
     give all the rewards
     :param observations: all board
     :param agents: all agents list
+    :param border_positions: all agents list
     :param t: time
     :return: liste of all reward
     """
@@ -38,10 +39,10 @@ def reward_full(observations, agents: List[Agent], border_positions, t):
                 # Give incentive to other predators if one wins
                 if agent.type == "predator":
                     if not all_winners[idx]:
-                        all_rewards[idx] = config.reward.reward_if_predators_win
+                        all_rewards[idx] += config.reward.reward_if_predators_win
             if hot_walls:  # If agent touches the borders, gets a penalty
-                x, y = observations[2 * idx], observations[2 * idx + 1]
-                if x in border_positions or y in border_positions:
+                x, y, z = observations[3 * idx], observations[3 * idx + 1], observations[3 * idx + 2]
+                if x in border_positions or y in border_positions or (config.env.world_3D and z in border_positions):
                     all_rewards[idx] = -1
 
     return all_rewards
@@ -56,16 +57,17 @@ def get_reward_agent(observations, agent_index, agents: List[Agent], t):
     :param t:
     :return: reward value
     """
-    x = observations[2 * agent_index]
-    y = observations[2 * agent_index + 1]
+    x = observations[3 * agent_index]
+    y = observations[3 * agent_index + 1]
+    z = observations[3 * agent_index + 2]
     min_distance = None
     agent_reward = None
     winner = False
     agent_type = agents[agent_index].type
 
     # For all enemies, we compute the distance between actual agent and enemy agents
-    for x_1, y_1 in get_enemy_positions(agent_index, agents, observations):
-        reward, distance = distance_reward(agent_type, x, y, x_1, y_1)
+    for x_1, y_1, z_1 in get_enemy_positions(agent_index, agents, observations):
+        reward, distance = distance_reward(agent_type, x, y, z, x_1, y_1, z_1)
         # If distance is smaller...
         if min_distance is None or distance < min_distance:
             min_distance, agent_reward = distance, reward
@@ -78,44 +80,50 @@ def get_reward_agent(observations, agent_index, agents: List[Agent], t):
     return agent_reward, winner
 
 
-def distance_reward(agent_type, x, y, x1, y1) -> Tuple:
+def distance_reward(agent_type, x, y, z, x1, y1, z1) -> Tuple:
     """
     Returns the reward obtained according to the type and the position of two agents
     Args:
         agent_type: between prey and predator
         x: position x current agent
         y: position y current agent
+        z: position y current agent
         x1: position secondary agent
         y1: position secondary agent
+        z1: position secondary agent
 
     Returns: (reward, distance_between_agents)
     """
     assert agent_type in ['prey', 'predator'], "Agent type is not correct."
     dx = x - x1
     dy = y - y1
+    dz = z - z1
     if config.env.infinite_world:
-        y1_teleport = 1 - 1 / config.env.board_size + y1
-        y2_teleport = 1 - 1 / config.env.board_size + y
         x1_teleport = 1 - 1 / config.env.board_size + x1
         x2_teleport = 1 - 1 / config.env.board_size + x
+        y1_teleport = 1 - 1 / config.env.board_size + y1
+        y2_teleport = 1 - 1 / config.env.board_size + y
+        z1_teleport = 1 - 1 / config.env.board_size + z1
+        z2_teleport = 1 - 1 / config.env.board_size + z  # TODO: Fix teleports
         dx = min(x - x1, x1_teleport - x, x2_teleport - x1)
         dy = min(y - y1, y1_teleport - y, y2_teleport - y1)
-    return distance_reward_prey(dx, dy) if agent_type == "prey" else distance_reward_predator(dx, dy)
+        dz = min(z - z1, z1_teleport - z, z2_teleport - z1)
+    return distance_reward_prey(dx, dy, dz) if agent_type == "prey" else distance_reward_predator(dx, dy, dz)
 
 
-def distance_reward_prey(dx, dy):
+def distance_reward_prey(dx, dy, dz):
     """
     Returns: Reward = $1 - \exp(-c \cdot d^2)$
     """
-    distance = np.linalg.norm([dx, dy])
+    distance = np.linalg.norm([dx, dy, dz])
     rw = 1 - 2 * np.exp(-config.reward.coef_distance_reward_prey * distance * distance)
     return rw, distance
 
 
-def distance_reward_predator(dx, dy):
+def distance_reward_predator(dx, dy, dz):
     """
     Returns: Reward = $\exp(-c \cdot d^2)$
     """
-    distance = np.linalg.norm([dx, dy])
+    distance = np.linalg.norm([dx, dy, dz])
     rw = np.exp(-config.reward.coef_distance_reward_predator * distance * distance)
     return rw, distance

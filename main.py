@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 import time
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import torch
 import numpy as np
 from sim import Env, AgentDQN, ReplayMemory
@@ -40,14 +41,17 @@ for agent in agents:
         path = os.path.abspath(os.path.join(config.learning.model_path, agent.id + ".pth"))
         agent.load(path)
 
-env = Env(config.env)
+env = Env(config.env, config)
 
 # Add agents to the environment
 for agent in agents:
     env.add_agent(agent, position=None)
 
 fig_board = plt.figure(0)
-ax_board = fig_board.gca()
+if config.env.world_3D:
+    ax_board = fig_board.gca(projection="3d")
+else:
+    ax_board = fig_board.gca()
 
 fig_losses_returns, (ax_losses, ax_returns) = plt.subplots(1, 2)
 
@@ -71,7 +75,7 @@ for episode in range(config.learning.n_episodes):
             ax_board.cla()
             env.plot(next_states, rewards, ax_board)
             plt.draw()
-            plt.pause(0.01)
+            plt.pause(0.001)
 
         # Learning Step
         if not test_step:

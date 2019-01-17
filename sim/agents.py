@@ -56,11 +56,17 @@ class Agent:
             self.soft_update(*params)
 
     def plot(self, position, reward, radius, ax: plt.Axes):
-        x, y = position
-        circle = plt.Circle((x, y), radius=radius, color=self.colors[self.type])
-        ax.add_artist(circle)
-        ax.text(x - radius/2, y, self.id)
-        ax.text(x - radius/2, y-0.05, "Reward: {}".format(round(reward, 3)))
+        if len(position) == 2:
+            x, y = position
+            circle = plt.Circle((x, y), radius=radius, color=self.colors[self.type])
+            ax.add_artist(circle)
+            ax.text(x - radius/2, y, self.id)
+            ax.text(x - radius/2, y-0.05, "Reward: {}".format(round(reward, 3)))
+        else:  # 3D
+            x, y, z = position
+            ax.scatter(x, y, z, s=100, c=self.colors[self.type], marker="o")
+            ax.text(x - radius/2, y, z, self.id)
+            ax.text(x - radius/2, y-0.1, z, "Reward: {}".format(round(reward, 3)))
 
     def soft_update(self, *params):
         raise NotImplementedError
