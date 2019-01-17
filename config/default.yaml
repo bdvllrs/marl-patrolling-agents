@@ -36,7 +36,7 @@ learning:
   save_folder: ./builds/
   DDQN: Yes
   tau: 0.01
-  gumbel_softmax: No
+  gumbel_softmax: Yes
 
   plot_episodes_every: 100
   plot_curves_every: 100

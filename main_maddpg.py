@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import torch
 import numpy as np
-from sim import Env, ReplayMemory, AgentDDPG, AgentMADDPG
+from sim import Env, ReplayMemory, AgentMADDPG
 from utils import Config, Metrics, compute_discounted_return
 
 plt.ion()
@@ -27,14 +27,11 @@ agents = [AgentMADDPG("predator", "predator-{}".format(k), device, config.agents
 agents += [AgentMADDPG("prey", "prey-{}".format(k), device, config.agents)
            for k in range(config.agents.number_preys)]
 
-
 metrics = []
 actors_noise = []
 # Definition of the memories and set to device
 # Define the metrics for all agents
 for agent in agents:
-
-    agent.memory = ReplayMemory(config.replay_memory.size)
     metrics.append(Metrics())
 
     # If we have to load the pretrained model
@@ -43,11 +40,12 @@ for agent in agents:
         agent.load(path)
 
 env = Env(config.env, config)
-
+shared_memory = ReplayMemory(config.replay_memory.size)
+target_actors = [agents[k].target_actor for k in range(len(agents))]
+actors = [agents[k].policy_actor for k in range(len(agents))]
 # Add agents to the environment
 for idx, agent in enumerate(agents):
     env.add_agent(agent, position=None)
-
 
 fig_board = plt.figure(0)
 if config.env.world_3D:
@@ -71,10 +69,7 @@ for episode in range(config.learning.n_episodes):
         actions = []
         for i in range(len(agents)):
             action = agents[i].draw_action(states[i], no_exploration=test_step)
-            if type(action) == int:
-                actions.append(action)
-            else:
-                actions.append(action[0])
+            actions.append(action)
         next_states, rewards, terminal = env.step(states, actions)
         all_rewards.append(rewards)
 
@@ -85,39 +80,18 @@ for episode in range(config.learning.n_episodes):
             plt.draw()
             plt.pause(0.01)
 
-        all_state_batch = []
-        all_next_state_batch = []
-        all_action_batch = []
-        all_reward_batch = []
-        target_policies = []
-        policies = []
-        # Learning Step
-        for k in range(len(agents)):
-            # Add to agent memory
-            agents[k].memory.add(states[k], next_states[k], actions[k], rewards[k])
-            # Get batch for learning
-            batch = agents[k].memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
-            if len(target_policies)!=len(agents):
-                target_policies.append(agents[k].target_policy)
-                policies.append(agents[k].policy_net)
-            if batch is not None:
-                state_batch, next_state_batch, action_batch, reward_batch = batch
-                all_state_batch.append(state_batch)
-                all_next_state_batch.append(next_state_batch)
-                all_action_batch.append(action_batch)
-                all_reward_batch.append(reward_batch)
+        shared_memory.add(states, next_states, actions, rewards)
 
-        if len(all_state_batch) > 0:
-
-            all_batch = np.array(all_state_batch), np.array(all_next_state_batch), \
-                        np.array(all_action_batch), np.array(all_reward_batch)
-
-
+        # Learning step
+        # Get batch for learning (batch_size x n_agents x dim)
+        batch = shared_memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
+        if batch is not None:
             for k in range(len(agents)):
-                loss = agents[k].learn_critic(all_batch, target_policies, k)
-                actor_loss = agents[k].learn_policy(all_batch, k, policies)
-                metrics[k].add_loss(loss)
-                states = next_states
+                loss_critic = agents[k].learn_critic(batch, target_actors, k)
+                loss_actor = agents[k].learn_actor(batch, actors, k)
+                metrics[k].add_loss(loss_critic)
+
+        states = next_states
 
     # Compute discounted return of the episode
     for k in range(len(agents)):
@@ -128,7 +102,7 @@ for episode in range(config.learning.n_episodes):
     # Plot learning curves
     if not episode % config.learning.plot_curves_every:
         print("Episode", episode)
-        print("Time :", time.time()-start)
+        print("Time :", time.time() - start)
 
         ax_losses.cla()
         ax_returns.cla()
