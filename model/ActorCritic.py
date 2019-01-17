@@ -15,7 +15,7 @@ class ActorNetwork(nn.Module):
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         hidden_size = config.agents.hidden_size
         state_dim = 4 * self.n_agents
-        output_size = config.agents.number_actions
+        output_size = 7 if config.env.world_3D else 5
         self.fc1 = nn.Linear(state_dim, hidden_size)
         self.fc2 = nn.Linear(hidden_size, hidden_size)
         self.fc3 = nn.Linear(hidden_size, output_size)
