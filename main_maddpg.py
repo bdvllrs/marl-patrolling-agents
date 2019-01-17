@@ -2,8 +2,11 @@ import os
 from datetime import datetime
 import time
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import torch
-from sim import Env, ReplayMemory, AgentMADDPG
+import numpy as np
+from sim import Env, ReplayMemory
+from sim.agents.multiagents import AgentMADDPG
 from utils import Config, Metrics, compute_discounted_return
 
 plt.ion()

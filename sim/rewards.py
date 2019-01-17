@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from sim.agents import Agent
+from sim.agents.agents import Agent
 import numpy as np
 from utils.config import Config
 from utils import get_enemy_positions

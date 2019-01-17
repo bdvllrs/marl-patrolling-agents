@@ -5,7 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import mpl_toolkits.mplot3d.art3d as art3d
 import numpy as np
 from sim.rewards import reward_full
-from sim.agents import Agent
+from sim.agents.agents import Agent
 import random
 
 
