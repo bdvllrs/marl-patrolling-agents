@@ -25,9 +25,6 @@ os.makedirs(path_figure)
 
 print("Using", device_type)
 
-model_path = os.path.abspath(config.learning.save_folder + '/' + datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-os.makedirs(model_path)
-
 number_agents = config.agents.number_predators + config.agents.number_preys
 # Definition of the agents
 agents = [AgentMADDPG("predator", "predator-{}".format(k), device, config.agents)
