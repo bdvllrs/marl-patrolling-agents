@@ -155,10 +155,10 @@ class AgentDQN(Agent):
         :return: loss
         """
         state_batch, next_state_batch, action_batch, reward_batch = batch
-        state_batch = torch.FloatTensor(state_batch, device=self.device)
-        next_state_batch = torch.FloatTensor(next_state_batch, device=self.device)
-        action_batch = torch.LongTensor(action_batch, device=self.device)
-        reward_batch = torch.FloatTensor(reward_batch, device=self.device)
+        state_batch = torch.FloatTensor(state_batch).to(self.device)
+        next_state_batch = torch.FloatTensor(next_state_batch).to(self.device)
+        action_batch = torch.LongTensor(action_batch).to(self.device)
+        reward_batch = torch.FloatTensor(reward_batch).to(self.device)
 
         action_batch = action_batch.reshape(action_batch.size(0), 1)
         reward_batch = reward_batch.reshape(reward_batch.size(0), 1)
