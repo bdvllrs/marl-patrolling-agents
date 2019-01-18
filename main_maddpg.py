@@ -83,7 +83,7 @@ for episode in range(config.learning.n_episodes):
         next_states, rewards, terminal = env.step(states, actions)
         all_rewards.append(rewards)
 
-        if not episode % config.learning.plot_episodes_every:
+        if not episode % config.learning.plot_episodes_every or not episode % config.learning.save_episodes_every:
             # Plot environment
             ax_board.cla()
             env.plot(states, rewards, ax_board)

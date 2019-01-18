@@ -103,15 +103,12 @@ def distance_reward(agent_type, x, y, z, x1, y1, z1) -> Tuple:
     dy = y - y1
     dz = z - z1
     if config.env.infinite_world:
-        x1_teleport = 1 - 1 / config.env.board_size + x1
-        x2_teleport = 1 - 1 / config.env.board_size + x
-        y1_teleport = 1 - 1 / config.env.board_size + y1
-        y2_teleport = 1 - 1 / config.env.board_size + y
-        z1_teleport = 1 - 1 / config.env.board_size + z1
-        z2_teleport = 1 - 1 / config.env.board_size + z  # TODO: Fix teleports
-        dx = min(x - x1, x1_teleport - x, x2_teleport - x1)
-        dy = min(y - y1, y1_teleport - y, y2_teleport - y1)
-        dz = min(z - z1, z1_teleport - z, z2_teleport - z1)
+        x1_teleport = 1 + x1
+        y1_teleport = 1 + y1
+        z1_teleport = 1 + z1
+        dx = min(abs(dx), abs(x - x1_teleport))
+        dy = min(abs(dy), abs(y - y1_teleport))
+        dz = min(abs(dz), abs(z - z1_teleport))
     return distance_reward_prey(dx, dy, dz) if agent_type == "prey" else distance_reward_predator(dx, dy, dz)
 
 
