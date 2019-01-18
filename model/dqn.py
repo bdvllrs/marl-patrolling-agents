@@ -14,11 +14,11 @@ class DQNUnit(nn.Module):
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         n_obstacles = 2 * len(config.env.obstacles)
         self.fc = nn.Sequential(
-            nn.Linear(self.n_agents * 3 + n_obstacles, 512),
+            nn.Linear(self.n_agents * 3 + n_obstacles, 128),
             nn.ReLU(),
-            nn.Linear(512, 64),
+            nn.Linear(128, 16),
             nn.ReLU(),
-            nn.Linear(64, n_actions),
+            nn.Linear(16, n_actions),
         )
 
     # Called with either one element to determine next action, or a batch
@@ -38,11 +38,11 @@ class DQNCritic(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(state_dim + action_dim * n_agents, 1024),
             nn.ReLU(),
-            nn.Linear(1024, 512),
+            nn.Linear(1024, 64),
             nn.ReLU(),
-            nn.Linear(512, 64),
+            nn.Linear(64, 16),
             nn.ReLU(),
-            nn.Linear(64, 1),
+            nn.Linear(16, 1),
         )
 
     def forward(self, x, actions):
@@ -69,7 +69,9 @@ class DQNActor(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 64),
             nn.ReLU(),
-            nn.Linear(64, action_dim),
+            nn.Linear(64, 16),
+            nn.ReLU(),
+            nn.Linear(16, action_dim),
             nn.Softmax(dim=1)
         )
 

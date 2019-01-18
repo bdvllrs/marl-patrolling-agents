@@ -60,7 +60,7 @@ class AgentMADDPG(Agent):
         state_batch = torch.FloatTensor(state_batch[:, idx]).to(self.device)  # batch x agents x dim
         next_state_batch = torch.FloatTensor(next_state_batch[:, idx]).to(self.device)
         action_batch = torch.LongTensor(action_batch).to(self.device).unsqueeze(2)  # batch x agents x 1
-        reward_batch = torch.FloatTensor(reward_batch[:, idx], device=self.device)  # batch x dim
+        reward_batch = torch.FloatTensor(reward_batch[:, idx]).to(self.device)  # batch x dim
 
         self.critic_optimizer.zero_grad()
 

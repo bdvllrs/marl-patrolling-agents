@@ -42,4 +42,4 @@ def to_onehot(values, max):
     Returns:
 
     """
-    return torch.zeros(values.size(0), max).scatter_(1, values, 1).to(torch.float)
+    return torch.zeros(values.size(0), max).type_as(values).scatter_(1, values, 1).to(torch.float)
