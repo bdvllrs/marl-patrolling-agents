@@ -43,7 +43,7 @@ class DQNCritic(nn.Module):
             nn.Linear(10, 1),
         )
 
-    def forward(self, x, *actions):
+    def forward(self, x, actions):
         """
         Args:
             x: (batch_size, state_size)

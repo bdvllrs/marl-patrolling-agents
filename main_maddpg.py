@@ -46,8 +46,6 @@ for agent in agents:
 
 env = Env(config.env, config)
 shared_memory = ReplayMemory(config.replay_memory.size)
-target_actors = [agents[k].target_actor for k in range(len(agents))]
-actors = [agents[k].policy_actor for k in range(len(agents))]
 # Add agents to the environment
 for idx, agent in enumerate(agents):
     env.add_agent(agent, position=None)
@@ -101,10 +99,14 @@ for episode in range(config.learning.n_episodes):
         # Learning step
         # Get batch for learning (batch_size x n_agents x dim)
         batch = shared_memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
+        target_actors = [agents[k].target_actor for k in range(len(agents))]
+
         if batch is not None:
             for k in range(len(agents)):
-                loss_critic, loss_actor = agents[k].learn(batch, target_actors, k)
+                loss_critic = agents[k].learn_critic(batch, target_actors, k)
                 metrics[k].add_loss(loss_critic)
+            for k in range(len(agents)):
+                loss_actor = agents[k].learn_actor(batch, target_actors, k)
                 metrics[k].add_loss_actor(loss_actor)
 
         states = next_states

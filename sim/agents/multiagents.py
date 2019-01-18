@@ -33,7 +33,6 @@ class AgentMADDPG(Agent):
         self.target_critic.eval()
         self.target_actor.eval()
 
-        self.n_iter = 0
         self.steps_done = 0
 
     def draw_action(self, state, no_exploration):
@@ -47,18 +46,19 @@ class AgentMADDPG(Agent):
                 action = np.argmax(action_probs[0])
             else:
                 action = random.randrange(self.number_actions)
+        self.steps_done += 1
         return action
 
-    def learn(self, batch, target_actors, idx):
+    def learn_critic(self, batch, target_actors, idx):
         """
 
         :param batch:
         :return:
         """
         state_batch, next_state_batch, action_batch, reward_batch = batch
+
         state_batch = torch.FloatTensor(state_batch[:, idx]).to(self.device)  # batch x agents x dim
-        next_state_batch = torch.FloatTensor(next_state_batch).to(self.device)
-        next_state_batch_idx = torch.FloatTensor(next_state_batch[:, idx]).to(self.device)
+        next_state_batch = torch.FloatTensor(next_state_batch[:, idx]).to(self.device)
         action_batch = torch.LongTensor(action_batch).to(self.device).unsqueeze(2)  # batch x agents x 1
         reward_batch = torch.FloatTensor(reward_batch[:, idx], device=self.device)  # batch x dim
 
@@ -69,24 +69,34 @@ class AgentMADDPG(Agent):
         target_actions = []
         policy_actions = []
         for a in range(len(target_actors)):
-            target_action = target_actors[a](next_state_batch_idx).max(1)[1].unsqueeze(1)
+            target_action = target_actors[a](next_state_batch).max(1)[1].unsqueeze(1)
             onehot_target_action = to_onehot(target_action, action_dim)
             onehot_policy_action = to_onehot(action_batch[:, a], action_dim)
             target_actions.append(onehot_target_action)
             policy_actions.append(onehot_policy_action)
 
-        predicted_q = self.policy_critic(state_batch, *policy_actions)  # dim (batch_size x 1)
-        target_q = reward_batch + self.gamma * self.target_critic(next_state_batch_idx, *target_actions)
+        predicted_q = self.policy_critic(state_batch, policy_actions)  # dim (batch_size x 1)
+        target_q = reward_batch + self.gamma * self.target_critic(next_state_batch, target_actions)
 
         loss = F.mse_loss(predicted_q, target_q)
 
         loss.backward()
 
-        torch.nn.utils.clip_grad_norm_(self.policy_critic.parameters(), 1)
-
         self.critic_optimizer.step()
 
-        # Learn actor
+        if not self.steps_done % config.agents.soft_update_frequency:
+            soft_update(self.target_critic, self.policy_critic)
+
+        return loss.detach().cpu().item()
+
+    def learn_actor(self, batch, target_actors, idx):
+        state_batch, next_state_batch, action_batch, reward_batch = batch
+
+        state_batch = torch.FloatTensor(state_batch[:, idx]).to(self.device)  # batch x agents x dim
+        action_batch = torch.LongTensor(action_batch).to(self.device).unsqueeze(2)  # batch x agents x 1
+
+        action_dim = 7 if config.env.world_3D else 5
+
         self.actor_optimizer.zero_grad()
         predicted_action = self.policy_actor(state_batch).max(1)[1].unsqueeze(1)
         cloned_action_batch = action_batch.clone()
@@ -97,18 +107,19 @@ class AgentMADDPG(Agent):
             onehot_policy_action = to_onehot(cloned_action_batch[:, a], action_dim)
             policy_actions.append(onehot_policy_action)
 
-        actor_loss = -self.policy_critic(state_batch, *policy_actions)
+        actor_loss = -self.policy_critic(state_batch, policy_actions)
         actor_loss = actor_loss.mean()
         actor_loss.backward()
+
+        torch.nn.utils.clip_grad_norm_(self.policy_critic.parameters(), 1)
+        torch.nn.utils.clip_grad_norm_(self.policy_actor.parameters(), 1)
+
         self.actor_optimizer.step()
 
-        if not self.n_iter % config.agents.soft_update_frequency:
+        if not self.steps_done % config.agents.soft_update_frequency:
             soft_update(self.target_actor, self.policy_actor)
-            soft_update(self.target_critic, self.policy_critic)
 
-        self.n_iter += 1
-
-        return loss.detach().cpu().item(), actor_loss.detach().cpu().item()
+        return actor_loss.detach().cpu().item()
 
     def save(self, name):
         """
