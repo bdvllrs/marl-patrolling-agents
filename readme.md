@@ -4,9 +4,6 @@ DDQN 2D 2vs1 | DDQN labyrinth 2vs1 | DDQN 3D 2vs1
 :---------:|:----------:|:-----------:
 ![](gifs/2D.gif "DDQN 2D 2vs1") | ![](gifs/labyrinth.gif "DDQN labyrinth 2vs1") | ![](gifs/3D_gif.gif "DDQN 3D 2vs1")
 
-
-Inspired from the idea in [Yasuyuki, S., Hirofumi, O., Tadashi, M., & Maya, H. (2015, May). Cooperative capture by multi-agent using reinforcement learning application for security patrol systems. In Control Conference (ASCC), 2015 10th Asian (pp. 1-6). IEEE](https://ieeexplore.ieee.org/document/7244682).
-
 ## Objective:
 We have a board of size (`width`=100, `height`=100) where two kind of agents are evolving:
 - `sim.Target` is a "bad guy"
