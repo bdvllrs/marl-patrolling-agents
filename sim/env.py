@@ -2,6 +2,7 @@ from typing import List
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 import mpl_toolkits.mplot3d.art3d as art3d
 import numpy as np
 from sim.rewards import reward_full
@@ -239,10 +240,24 @@ class Env:
         for x, y in self.obstacles:
             x, y = self.possible_location_values[x], self.possible_location_values[y]
             side = self.possible_location_values[1]
-            block = plt.Rectangle((x - side / 2, y - side / 2), width=side, height=side, linewidth=0, color="black")
-            ax.add_patch(block)
             if self.config.env.world_3D:
-                art3d.pathpatch_2d_to_3d(block, z=0)
+                top = self.possible_location_values[-1]
+                points = [(x - side / 2, y - side / 2, 0), (x - side / 2, y + side / 2, 0), (x + side / 2, y + side / 2, 0),
+                          (x + side / 2, y - side / 2, 0),
+                          (x - side / 2, y - side / 2, top), (x - side / 2, y + side / 2, top),
+                          (x + side / 2, y + side / 2, top), (x + side / 2, y - side / 2, top)]
+                edges = [[points[0], points[1], points[2], points[3]],
+                         [points[4], points[5], points[6], points[7]],
+                         [points[0], points[1], points[5], points[4]],
+                         [points[2], points[3], points[6], points[7]],
+                         [points[0], points[4], points[7], points[3]],
+                         [points[1], points[5], points[6], points[2]]]
+                block = Poly3DCollection(edges, linewidth=0)
+                block.set_facecolor((0, 0, 0, 0.1))
+                ax.add_collection3d(block)
+            else:
+                block = plt.Rectangle((x - side / 2, y - side / 2), width=side, height=side, linewidth=0, color="black")
+                ax.add_patch(block)
 
         for k in range(len(self.agents)):
             if self.config.env.world_3D:
