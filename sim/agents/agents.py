@@ -76,7 +76,7 @@ class Agent:
     def hard_update(self, *params):
         raise NotImplementedError
 
-    def learn(self, batch):
+    def learn(self, batch, *params):
         raise NotImplementedError
 
     def save(self, name):

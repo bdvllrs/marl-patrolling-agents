@@ -103,8 +103,7 @@ for episode in range(config.learning.n_episodes):
         batch = shared_memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
         if batch is not None:
             for k in range(len(agents)):
-                loss_critic = agents[k].learn_critic(batch, target_actors, k)
-                loss_actor = agents[k].learn_actor(batch, actors, k)
+                loss_critic, loss_actor = agents[k].learn(batch, target_actors, k)
                 metrics[k].add_loss(loss_critic)
                 metrics[k].add_loss_actor(loss_actor)
 
