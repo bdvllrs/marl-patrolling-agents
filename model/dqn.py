@@ -31,18 +31,16 @@ class DQNCritic(nn.Module):
     def __init__(self):
         super(DQNCritic, self).__init__()
 
-        action_dim = 7 if config.env.world_3D else 5
+        # action_dim = 7 if config.env.world_3D else 5
         n_agents = config.agents.number_preys + config.agents.number_predators
         n_obstacles = 2 * len(config.env.obstacles)
         state_dim = n_agents * 3 + n_obstacles
         self.fc = nn.Sequential(
-            nn.Linear(state_dim + action_dim * n_agents, 1024),
+            nn.Linear(state_dim + n_agents, 128),
             nn.ReLU(),
-            nn.Linear(1024, 64),
+            nn.Linear(128, 32),
             nn.ReLU(),
-            nn.Linear(64, 16),
-            nn.ReLU(),
-            nn.Linear(16, 1),
+            nn.Linear(32, 1),
         )
 
     def forward(self, x, actions):
@@ -65,13 +63,11 @@ class DQNActor(nn.Module):
         n_obstacles = 2 * len(config.env.obstacles)
         state_dim = n_agents * 3 + n_obstacles
         self.fc = nn.Sequential(
-            nn.Linear(state_dim, 512),
+            nn.Linear(state_dim, 128),
             nn.ReLU(),
-            nn.Linear(512, 64),
+            nn.Linear(128, 32),
             nn.ReLU(),
-            nn.Linear(64, 16),
-            nn.ReLU(),
-            nn.Linear(16, action_dim),
+            nn.Linear(32, action_dim),
             nn.Softmax(dim=1)
         )
 
