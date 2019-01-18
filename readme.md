@@ -1,8 +1,8 @@
 # MARL for patrolling agents
 
-DDQN 2D 2vs1 | DDQN labyrinth 2vs1 | DDQN 3D 2vs1
+DDQN Normal 2vs1 | DDQN Obstacles 2vs1 | DDQN 3D 2vs1
 :---------:|:----------:|:-----------:
-![](gifs/2D.gif "DDQN 2D 2vs1") | ![](gifs/labyrinth.gif "DDQN labyrinth 2vs1") | ![](gifs/3D_gif.gif "DDQN 3D 2vs1")
+![](gifs/normal.gif "DDQN Normal 2vs1") | ![](gifs/obstacles.gif "DDQN Obstacles 2vs1") | ![](gifs/3D.gif "DDQN 3D 2vs1")
 
 
 Inspired from the idea in [Yasuyuki, S., Hirofumi, O., Tadashi, M., & Maya, H. (2015, May). Cooperative capture by multi-agent using reinforcement learning application for security patrol systems. In Control Conference (ASCC), 2015 10th Asian (pp. 1-6). IEEE](https://ieeexplore.ieee.org/document/7244682).
