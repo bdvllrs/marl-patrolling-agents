@@ -124,20 +124,20 @@ class Env:
         # return positions
         states = []
         for k in range(len(self.agents)):
-            relative_positions = []
-            x = positions[3 * k]  # Position of the current agent
-            y = positions[3 * k + 1]  # Position of the current agent
-            z = positions[3 * k + 2]  # Position of the current agent
-            # Compute relative positions
-            for i in range(len(self.agents)):
-                x_other = positions[3 * i]  # Position of the current agent
-                y_other = positions[3 * i + 1]  # Position of the current agent
-                z_other = positions[3 * i + 2]  # Position of the current agent
-                relative_positions.append(x - x_other)
-                relative_positions.append(y - y_other)
-                relative_positions.append(z - z_other)
+            # relative_positions = []
+            # x = positions[3 * k]  # Position of the current agent
+            # y = positions[3 * k + 1]  # Position of the current agent
+            # z = positions[3 * k + 2]  # Position of the current agent
+            # # Compute relative positions
+            # for i in range(len(self.agents)):
+            #     x_other = positions[3 * i]  # Position of the current agent
+            #     y_other = positions[3 * i + 1]  # Position of the current agent
+            #     z_other = positions[3 * i + 2]  # Position of the current agent
+            #     relative_positions.append(x - x_other)
+            #     relative_positions.append(y - y_other)
+            #     relative_positions.append(z - z_other)
             state = positions[:]
-            state.extend(relative_positions)
+            # state.extend(relative_positions)
             state.extend(self.obstacle_positions)
             states.append(state)
         return states

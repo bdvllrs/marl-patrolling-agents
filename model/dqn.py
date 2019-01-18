@@ -14,11 +14,11 @@ class DQNUnit(nn.Module):
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         n_obstacles = 2 * len(config.env.obstacles)
         self.fc = nn.Sequential(
-            nn.Linear(self.n_agents * 6 + n_obstacles, 20),
+            nn.Linear(self.n_agents * 3 + n_obstacles, 512),
             nn.ReLU(),
-            nn.Linear(20, 10),
+            nn.Linear(512, 64),
             nn.ReLU(),
-            nn.Linear(10, n_actions),
+            nn.Linear(64, n_actions),
         )
 
     # Called with either one element to determine next action, or a batch
@@ -34,13 +34,15 @@ class DQNCritic(nn.Module):
         action_dim = 7 if config.env.world_3D else 5
         n_agents = config.agents.number_preys + config.agents.number_predators
         n_obstacles = 2 * len(config.env.obstacles)
-        state_dim = n_agents * 3 * 2 + n_obstacles
+        state_dim = n_agents * 3 + n_obstacles
         self.fc = nn.Sequential(
-            nn.Linear(state_dim + action_dim * n_agents, 20),
+            nn.Linear(state_dim + action_dim * n_agents, 1024),
             nn.ReLU(),
-            nn.Linear(20, 10),
+            nn.Linear(1024, 512),
             nn.ReLU(),
-            nn.Linear(10, 1),
+            nn.Linear(512, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1),
         )
 
     def forward(self, x, actions):
@@ -61,13 +63,13 @@ class DQNActor(nn.Module):
         action_dim = 7 if config.env.world_3D else 5
         n_agents = config.agents.number_preys + config.agents.number_predators
         n_obstacles = 2 * len(config.env.obstacles)
-        state_dim = n_agents * 2 * 3 + n_obstacles
+        state_dim = n_agents * 3 + n_obstacles
         self.fc = nn.Sequential(
-            nn.Linear(state_dim, 50),
+            nn.Linear(state_dim, 512),
             nn.ReLU(),
-            nn.Linear(50, 10),
+            nn.Linear(512, 64),
             nn.ReLU(),
-            nn.Linear(10, action_dim),
+            nn.Linear(64, action_dim),
             nn.Softmax(dim=1)
         )
 
