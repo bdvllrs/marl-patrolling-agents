@@ -59,7 +59,7 @@ class AgentMADDPG(Agent):
 
         state_batch = torch.FloatTensor(state_batch[:, idx]).to(self.device)  # batch x agents x dim
         next_state_batch = torch.FloatTensor(next_state_batch[:, idx]).to(self.device)
-        action_batch = torch.LongTensor(action_batch).to(self.device).unsqueeze(2)  # batch x agents x 1
+        action_batch = torch.FloatTensor(action_batch).to(self.device).unsqueeze(2)  # batch x agents x 1
         reward_batch = torch.FloatTensor(reward_batch[:, idx], device=self.device)  # batch x dim
 
         self.critic_optimizer.zero_grad()
@@ -69,11 +69,11 @@ class AgentMADDPG(Agent):
         target_actions = []
         policy_actions = []
         for a in range(len(target_actors)):
-            target_action = target_actors[a](next_state_batch).max(1)[1].unsqueeze(1)
-            onehot_target_action = to_onehot(target_action, action_dim)
-            onehot_policy_action = to_onehot(action_batch[:, a], action_dim)
-            target_actions.append(onehot_target_action)
-            policy_actions.append(onehot_policy_action)
+            target_action = target_actors[a](next_state_batch).max(1)[1].unsqueeze(1).to(torch.float)
+            # onehot_target_action = to_onehot(target_action, action_dim)
+            # onehot_policy_action = to_onehot(action_batch[:, a], action_dim)
+            target_actions.append(target_action / float(action_dim))
+            policy_actions.append(action_batch[:, a] / float(action_dim))
 
         predicted_q = self.policy_critic(state_batch, policy_actions)  # dim (batch_size x 1)
         target_q = reward_batch + self.gamma * self.target_critic(next_state_batch, target_actions)
@@ -93,7 +93,7 @@ class AgentMADDPG(Agent):
         state_batch, next_state_batch, action_batch, reward_batch = batch
 
         state_batch = torch.FloatTensor(state_batch[:, idx]).to(self.device)  # batch x agents x dim
-        action_batch = torch.LongTensor(action_batch).to(self.device).unsqueeze(2)  # batch x agents x 1
+        action_batch = torch.FloatTensor(action_batch).to(self.device).unsqueeze(2)  # batch x agents x 1
 
         action_dim = 7 if config.env.world_3D else 5
 
@@ -104,8 +104,8 @@ class AgentMADDPG(Agent):
 
         policy_actions = []
         for a in range(len(target_actors)):
-            onehot_policy_action = to_onehot(cloned_action_batch[:, a], action_dim)
-            policy_actions.append(onehot_policy_action)
+            # onehot_policy_action = to_onehot(cloned_action_batch[:, a], action_dim)
+            policy_actions.append(cloned_action_batch[:, a] / float(action_dim))
 
         actor_loss = -self.policy_critic(state_batch, policy_actions)
         actor_loss = actor_loss.mean()
