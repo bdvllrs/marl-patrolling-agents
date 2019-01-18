@@ -13,8 +13,9 @@ class DQNUnit(nn.Module):
         n_actions = 7 if config.env.world_3D else 5
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         n_obstacles = 2 * len(config.env.obstacles)
+        n_magic_switch = int(config.env.magic_switch) * 2 + self.n_agents
         self.fc = nn.Sequential(
-            nn.Linear(self.n_agents * 3 + n_obstacles, 128),
+            nn.Linear(self.n_agents * 3 + n_obstacles + n_magic_switch, 128),
             nn.ReLU(),
             nn.Linear(128, 16),
             nn.ReLU(),
@@ -34,7 +35,7 @@ class DQNCritic(nn.Module):
         # action_dim = 7 if config.env.world_3D else 5
         n_agents = config.agents.number_preys + config.agents.number_predators
         n_obstacles = 2 * len(config.env.obstacles)
-        state_dim = n_agents * 3 + n_obstacles
+        state_dim = n_agents * 3 + n_obstacles + int(config.env.magic_switch) * (2 + n_agents)
         self.fc = nn.Sequential(
             nn.Linear(state_dim + n_agents, 128),
             nn.ReLU(),
@@ -61,7 +62,7 @@ class DQNActor(nn.Module):
         action_dim = 7 if config.env.world_3D else 5
         n_agents = config.agents.number_preys + config.agents.number_predators
         n_obstacles = 2 * len(config.env.obstacles)
-        state_dim = n_agents * 3 + n_obstacles
+        state_dim = n_agents * 3 + n_obstacles + int(config.env.magic_switch) * (2 + n_agents)
         self.fc = nn.Sequential(
             nn.Linear(state_dim, 128),
             nn.ReLU(),

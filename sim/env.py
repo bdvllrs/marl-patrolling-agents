@@ -30,6 +30,9 @@ class Env:
 
         self.obstacles = env_config.obstacles
 
+        self.magic_switch = None
+        self.initial_types = []
+
         self.obstacle_positions = []
         for (x, y) in self.obstacles:
             self.obstacle_positions.append(self.possible_location_values[x])
@@ -61,6 +64,7 @@ class Env:
                     z = self.possible_location_values[k]
             position = x, y, z
         self.agents.append(agent)
+        self.initial_types.append(agent.type)
         self.initial_positions.append(position)
 
     def _get_random_position(self):
@@ -117,8 +121,16 @@ class Env:
         if [position[0], position[1]] in self.obstacles:
             position = index_x, index_y, index_z
 
-        return (self.possible_location_values[position[0]], self.possible_location_values[position[1]],
-                self.possible_location_values[position[2]])
+        position = (self.possible_location_values[position[0]], self.possible_location_values[position[1]],
+                    self.possible_location_values[position[2]])
+        
+        if self.config.env.magic_switch and position[0] == self.magic_switch[0] and position[1] == self.magic_switch[1]:
+            for agent in self.agents:
+                if agent.type == "predator":
+                    agent.type = "prey"
+                else:
+                    agent.type = "predator"
+        return position 
 
     def _get_state_from_positions(self, positions):
         # return positions
@@ -139,6 +151,10 @@ class Env:
             state = positions[:]
             # state.extend(relative_positions)
             state.extend(self.obstacle_positions)
+            if self.config.env.magic_switch:
+                state.extend([self.magic_switch[0], self.magic_switch[1]])
+                types = [int(agent.type == "predator") for agent in self.agents]
+                state.extend(types)
             states.append(state)
         return states
 
@@ -193,6 +209,10 @@ class Env:
             absolute_positions.append(position[1])
             absolute_positions.append(position[2])
         # Define the initial states
+        if self.config.env.magic_switch:
+            self.magic_switch = self._get_random_position()[:2]
+            for k in range(len(self.agents)):
+                self.agents[k].type = self.initial_types[k]
         return self._get_state_from_positions(absolute_positions)
 
     def step(self, prev_states, actions):
@@ -258,6 +278,12 @@ class Env:
             else:
                 block = plt.Rectangle((x - side / 2, y - side / 2), width=side, height=side, linewidth=0, color="black")
                 ax.add_patch(block)
+        if self.config.env.magic_switch:
+            x, y = self.magic_switch
+            side = self.possible_location_values[1]
+            block = plt.Rectangle((x - side / 2, y - side / 2), width=side, height=side, linewidth=0, color="purple")
+            ax.add_patch(block)
+
 
         for k in range(len(self.agents)):
             if self.config.env.world_3D:
