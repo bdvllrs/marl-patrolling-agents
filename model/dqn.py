@@ -63,9 +63,9 @@ class DQNActor(nn.Module):
         n_obstacles = 2 * len(config.env.obstacles)
         state_dim = n_agents * 2 * 3 + n_obstacles
         self.fc = nn.Sequential(
-            nn.Linear(state_dim, 20),
+            nn.Linear(state_dim, 50),
             nn.ReLU(),
-            nn.Linear(20, 10),
+            nn.Linear(50, 10),
             nn.ReLU(),
             nn.Linear(10, action_dim),
             nn.Softmax(dim=1)
