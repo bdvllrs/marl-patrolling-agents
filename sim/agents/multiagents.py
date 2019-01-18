@@ -109,7 +109,7 @@ class AgentMADDPG(Agent):
         actor_loss.backward()
         self.actor_optimizer.step()
 
-        if not self.n_iter % self.update_frequency:
+        if not self.n_iter % config.agents.soft_update_frequency:
             soft_update(self.target_actor, self.policy_actor)
             soft_update(self.target_critic, self.policy_critic)
 
