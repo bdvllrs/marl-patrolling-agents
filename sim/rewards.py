@@ -103,12 +103,9 @@ def distance_reward(agent_type, x, y, z, x1, y1, z1) -> Tuple:
     dy = y - y1
     dz = z - z1
     if config.env.infinite_world:
-        x1_teleport = 1 + x1
-        y1_teleport = 1 + y1
-        z1_teleport = 1 + z1
-        dx = min(abs(dx), abs(x - x1_teleport))
-        dy = min(abs(dy), abs(y - y1_teleport))
-        dz = min(abs(dz), abs(z - z1_teleport))
+        dx = min(abs(dx), abs(x - x1 - 1), abs(x - y1 + 1))
+        dy = min(abs(dy), abs(y - y1 - 1), abs(y - y1 - 1))
+        dz = min(abs(dz), abs(z - z1 + 1), abs(z - z1 + 1))
     return distance_reward_prey(dx, dy, dz) if agent_type == "prey" else distance_reward_predator(dx, dy, dz)
 
 

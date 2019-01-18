@@ -39,7 +39,6 @@ class AgentMADDPG(Agent):
     def draw_action(self, state, no_exploration):
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(
             -1. * self.steps_done / self.EPS_DECAY)
-        self.steps_done += 1
         with torch.no_grad():
             state = torch.tensor(state).to(self.device).unsqueeze(dim=0).reshape(1, -1)
             if no_exploration:
