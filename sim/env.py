@@ -31,6 +31,7 @@ class Env:
         self.obstacles = env_config.obstacles
 
         self.magic_switch = None
+        self.initial_types = []
 
         self.obstacle_positions = []
         for (x, y) in self.obstacles:
@@ -63,6 +64,7 @@ class Env:
                     z = self.possible_location_values[k]
             position = x, y, z
         self.agents.append(agent)
+        self.initial_types.append(agent.type)
         self.initial_positions.append(position)
 
     def _get_random_position(self):
@@ -209,6 +211,8 @@ class Env:
         # Define the initial states
         if self.config.env.magic_switch:
             self.magic_switch = self._get_random_position()[:2]
+            for k in range(len(self.agents)):
+                self.agents[k].type = self.initial_types[k]
         return self._get_state_from_positions(absolute_positions)
 
     def step(self, prev_states, actions):
