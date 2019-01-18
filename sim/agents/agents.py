@@ -15,6 +15,18 @@ from utils.config import Config
 config = Config('./config')
 
 
+def hard_update(target, policy):
+    """
+    Copy network parameters from source to target
+    """
+    target.load_state_dict(policy.state_dict())
+
+
+def soft_update(target, policy, tau=config.learning.tau):
+    for target_param, param in zip(target.parameters(), policy.parameters()):
+        target_param.data.copy_(target_param.data * tau + param.data * (1. - tau))
+
+
 class Agent:
     type = "prey"  # or predator
     id = 0
@@ -51,9 +63,9 @@ class Agent:
 
     def update(self, *params):
         if self.update_type == "hard":
-            self.hard_update(*params)
+            hard_update(*params)
         elif self.update_type == "soft":
-            self.soft_update(*params)
+            soft_update(*params)
 
     def plot(self, position, reward, radius, ax: Union[plt.Axes, Axes3D]):
         if len(position) == 2:
@@ -69,12 +81,6 @@ class Agent:
             ax.set_zlim3d(0, 1)
             ax.set_ylim3d(0, 1)
             ax.set_xlim3d(0, 1)
-
-    def soft_update(self, *params):
-        raise NotImplementedError
-
-    def hard_update(self, *params):
-        raise NotImplementedError
 
     def learn(self, batch, *params):
         raise NotImplementedError
@@ -98,15 +104,6 @@ class AgentDQN(Agent):
 
         self.n_iter = 0
         self.steps_done = 0
-
-    def hard_update(self, target, policy):
-        """
-        Copy network parameters from source to target
-        """
-        target.load_state_dict(policy.state_dict())
-
-    def soft_update(self, target, policy):
-        raise NotImplementedError
 
     def draw_action(self, state, no_exploration=False):
         """

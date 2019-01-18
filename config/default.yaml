@@ -9,7 +9,7 @@ agents:
   lr: 0.01 # Learning rate
   lr_actor: 0.001 # Learning rate for actor
   update_frequency: 20 # Update the target net every...
-  update_type: hard # Type of update.
+  update_type: soft # Type of update.
   hidden_size: 32
 
 replay_memory:

@@ -7,7 +7,7 @@ from torch.nn import functional as F
 from torch.optim import Adam
 
 from model.dqn import DQNCritic, DQNActor
-from sim.agents.agents import Agent
+from sim.agents.agents import Agent, soft_update, hard_update
 from utils import Config, to_onehot
 from utils.misc import gumbel_softmax
 
@@ -109,6 +109,12 @@ class AgentMADDPG(Agent):
         actor_loss.backward()
         self.actor_optimizer.step()
 
+        if not self.n_iter % self.update_frequency:
+            soft_update(self.target_actor, self.policy_actor)
+            soft_update(self.target_critic, self.policy_critic)
+
+        self.n_iter += 1
+
         return loss.detach().cpu().item(), actor_loss.detach().cpu().item()
 
     def save(self, name):
@@ -142,13 +148,3 @@ class AgentMADDPG(Agent):
         self.target_actor.load_state_dict(params['target_actor'])
         self.critic_optimizer.load_state_dict(params['critic_optimizer'])
         self.actor_optimizer.load_state_dict(params['actor_optimizer'])
-
-    def hard_update(self, target, policy):
-        """
-        Copy network parameters from source to target
-        """
-        target.load_state_dict(policy.state_dict())
-
-    def soft_update(self, target, policy, tau=config.learning.tau):
-        for target_param, param in zip(target.parameters(), policy.parameters()):
-            target_param.data.copy_(target_param.data * tau + param.data * (1. - tau))
