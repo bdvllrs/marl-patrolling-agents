@@ -2,6 +2,7 @@ import os
 import shutil
 from datetime import datetime
 import time
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import torch
@@ -67,7 +68,12 @@ plt.show()
 
 start = time.time()
 path_figure_episode = None
+progress_bar = None
 for episode in range(config.learning.n_episodes):
+    if not episode % config.learning.plot_episodes_every:
+        if progress_bar is not None:
+            progress_bar.close()
+        progress_bar = tqdm(total=config.learning.plot_episodes_every)
     test_step = False
     if not episode % config.learning.plot_episodes_every:
         test_step = True
@@ -154,3 +160,6 @@ for episode in range(config.learning.n_episodes):
         for agent in agents:
             path = os.path.join(model_path, agent.id + ".pth")
             agent.save(path)
+
+    progress_bar.update(1)
+progress_bar.close()
