@@ -15,6 +15,7 @@ class Config:
     def __init__(self, path=None, config=None):
         self.__is_none = False
         self.__data = config if config is not None else {}
+        self.__is_none = False
         if path is not None:
             self.__path = os.path.abspath(os.path.join(os.curdir, path))
             with open(os.path.join(self.__path, "default.yaml"), "rb") as default_config:
@@ -26,6 +27,9 @@ class Config:
 
     def set(self, key, value):
         self.__data[key] = value
+
+    def __dir__(self):
+        return super().__dir__() + self.__data.keys()
 
     def __getattr__(self, item):
         if type(self.__data[item]) == dict:
