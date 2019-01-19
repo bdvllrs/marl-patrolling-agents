@@ -35,6 +35,8 @@ def reward_full(observations, agents: List[Agent], border_positions, t):
             #         if not all_winners[idx]:
             #             all_rewards[idx] = -1
             # else:
+            if all_winners[idx] and agent.type == "predator":
+                all_rewards[idx] += 0.8
             if config.reward.share_wins_among_predators and number_winning_predator > 0:
                 # Give incentive to other predators if one wins
                 if agent.type == "predator":
@@ -72,13 +74,13 @@ def get_reward_agent(observations, agent_index, agents: List[Agent], t):
         if min_distance is None or distance < min_distance:
             min_distance, agent_reward = distance, reward
 
-        if ((agent_type == "predator" and distance <= 1 / config.env.board_size) or
-                (agent_type == "prey" and distance > 1 / config.env.board_size)):
+        if ((agent_type == "predator" and distance < 1 / config.env.board_size) or
+                (agent_type == "prey" and distance >= 1 / config.env.board_size)):
             enemies_near.append(k)
 
     # Determine if it's a winner
-    if ((agent_type == "predator" and min_distance <= 1 / config.env.board_size) or
-            (agent_type == "prey" and min_distance > 1 / config.env.board_size)):
+    if ((agent_type == "predator" and min_distance < 1 / config.env.board_size) or
+            (agent_type == "prey" and min_distance >= 1 / config.env.board_size)):
         winner = True
 
     return agent_reward, winner, enemies_near
@@ -123,5 +125,5 @@ def distance_reward_predator(dx, dy, dz):
     Returns: Reward = $\exp(-c \cdot d^2)$
     """
     distance = np.linalg.norm([dx, dy, dz])
-    rw = np.exp(-config.reward.coef_distance_reward_predator * distance * distance)
+    rw = -1 + 2 * np.exp(-config.reward.coef_distance_reward_predator * distance * distance)
     return rw, distance
