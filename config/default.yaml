@@ -1,3 +1,5 @@
+build_name: No
+save_build: No
 agents:
   number_preys: 1
   number_predators: 3

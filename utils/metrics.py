@@ -5,16 +5,21 @@ class Metrics:
     def __init__(self):
         self.data = {
             "losses": [],
-            "loss_actor":[],
-            "returns": []
+            "loss_actor": [],
+            "returns": [],
+            "collisions": []
         }
 
         self.loss_buffer = []
         self.returns_buffer = []
         self.loss_actor = []
+        self.collision_count_buffer = []
 
     def add_return(self, value):
         self.returns_buffer.append(value)
+
+    def add_collision_count(self, value):
+        self.collision_count_buffer.append(value)
 
     def add_loss(self, value):
         self.loss_buffer.append(value)
@@ -32,10 +37,16 @@ class Metrics:
         if self.loss_actor:
             self.data["loss_actor"].append(np.mean(self.loss_actor))
             self.loss_actor = []
+        if self.collision_count_buffer:
+            self.data["collisions"].append(np.mean(self.collision_count_buffer))
+            self.collision_count_buffer = []
 
-    def plot(self, key, episode, ax, legend):
+    def plot(self, key, episode, ax, legend=None):
         x = np.linspace(0, episode, len(self.data[key]))
-        ax.plot(x, self.data[key], label=legend)
+        if legend is not None:
+            ax.plot(x, self.data[key], label=legend)
+        else:
+            ax.plot(x, self.data[key])
 
     def plot_returns(self, episode, ax, legend):
         self.plot("returns", episode, ax, legend)
@@ -45,3 +56,6 @@ class Metrics:
 
     def plot_losses_actor(self, episode, ax, legend):
         self.plot("loss_actor", episode, ax, legend)
+
+    def plot_collision_counts(self, episode, ax):
+        self.plot("collisions", episode, ax)

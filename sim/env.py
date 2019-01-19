@@ -123,14 +123,14 @@ class Env:
 
         position = (self.possible_location_values[position[0]], self.possible_location_values[position[1]],
                     self.possible_location_values[position[2]])
-        
+
         if self.config.env.magic_switch and position[0] == self.magic_switch[0] and position[1] == self.magic_switch[1]:
             for agent in self.agents:
                 if agent.type == "predator":
                     agent.type = "prey"
                 else:
                     agent.type = "predator"
-        return position 
+        return position
 
     def _get_state_from_positions(self, positions):
         # return positions
@@ -190,6 +190,16 @@ class Env:
                 indexes.append((index_x, index_y, (index_z - 1) % max_len))
         return indexes
 
+    def _get_collisions(self, positions):
+        n_collisions = 0
+        for i, agent in enumerate(self.agents):
+            x, y, z = positions[3 * i], positions[3 * i + 1], positions[3 * i + 2]
+            for j, other_agent in enumerate(self.agents):
+                x_2, y_2, z_2 = positions[3 * j], positions[3 * j + 1], positions[3 * j + 2]
+                if agent.type != other_agent.type and x == x_2 and y == y_2 and z == z_2:
+                    n_collisions += 1
+        return n_collisions // 2
+
     def reset(self):
         """
         Returns: State for each agent. Size is (number_agents, 4 * number_agents)
@@ -233,6 +243,7 @@ class Env:
             positions.append(new_position[0])
             positions.append(new_position[1])
             positions.append(new_position[2])
+        n_colisions = self._get_collisions(positions)
         next_state = self._get_state_from_positions(positions)
         # Determine rewards
         border_positions = [self.possible_location_values[0], self.possible_location_values[-1]]
@@ -241,7 +252,7 @@ class Env:
         terminal = False
         if self.current_iteration == self.max_iterations:
             terminal = True
-        return next_state, rewards, terminal
+        return next_state, rewards, terminal, n_colisions
 
     def plot(self, state, rewards, ax):
         # Add obstacles
@@ -262,7 +273,8 @@ class Env:
             side = self.possible_location_values[1]
             if self.config.env.world_3D:
                 top = self.possible_location_values[-1]
-                points = [(x - side / 2, y - side / 2, 0), (x - side / 2, y + side / 2, 0), (x + side / 2, y + side / 2, 0),
+                points = [(x - side / 2, y - side / 2, 0), (x - side / 2, y + side / 2, 0),
+                          (x + side / 2, y + side / 2, 0),
                           (x + side / 2, y - side / 2, 0),
                           (x - side / 2, y - side / 2, top), (x - side / 2, y + side / 2, top),
                           (x + side / 2, y + side / 2, top), (x + side / 2, y - side / 2, top)]
@@ -283,7 +295,6 @@ class Env:
             side = self.possible_location_values[1]
             block = plt.Rectangle((x - side / 2, y - side / 2), width=side, height=side, linewidth=0, color="purple")
             ax.add_patch(block)
-
 
         for k in range(len(self.agents)):
             if self.config.env.world_3D:
