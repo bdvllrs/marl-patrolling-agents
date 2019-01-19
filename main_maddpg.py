@@ -25,7 +25,7 @@ if config.save_build:
     path_figure = os.path.join(root_path, "figs")
     os.makedirs(model_path)
     os.makedirs(path_figure)
-    shutil.copytree(os.path.abspath('config/'), root_path)
+    shutil.copytree(os.path.abspath('config/'), os.path.join(root_path, 'config'))
 
 print("Using", device_type)
 

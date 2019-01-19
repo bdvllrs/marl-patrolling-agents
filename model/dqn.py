@@ -15,9 +15,11 @@ class DQNUnit(nn.Module):
         n_obstacles = 2 * len(config.env.obstacles)
         n_magic_switch = int(config.env.magic_switch) * 2 + self.n_agents
         self.fc = nn.Sequential(
-            nn.Linear(self.n_agents * 3 + n_obstacles + n_magic_switch, 128),
+            nn.Linear(self.n_agents * 3 + n_obstacles + n_magic_switch, 512),
             nn.ReLU(),
-            nn.Linear(128, 16),
+            nn.Linear(512, 64),
+            nn.ReLU(),
+            nn.Linear(64, 16),
             nn.ReLU(),
             nn.Linear(16, n_actions),
         )
@@ -37,7 +39,9 @@ class DQNCritic(nn.Module):
         n_obstacles = 2 * len(config.env.obstacles)
         state_dim = n_agents * 3 + n_obstacles + int(config.env.magic_switch) * (2 + n_agents)
         self.fc = nn.Sequential(
-            nn.Linear(state_dim + n_agents, 128),
+            nn.Linear(state_dim + n_agents, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 128),
             nn.ReLU(),
             nn.Linear(128, 32),
             nn.ReLU(),
@@ -64,11 +68,13 @@ class DQNActor(nn.Module):
         n_obstacles = 2 * len(config.env.obstacles)
         state_dim = n_agents * 3 + n_obstacles + int(config.env.magic_switch) * (2 + n_agents)
         self.fc = nn.Sequential(
-            nn.Linear(state_dim, 128),
+            nn.Linear(state_dim, 512),
             nn.ReLU(),
-            nn.Linear(128, 32),
+            nn.Linear(512, 64),
             nn.ReLU(),
-            nn.Linear(32, action_dim),
+            nn.Linear(64, 16),
+            nn.ReLU(),
+            nn.Linear(16, action_dim),
             nn.Softmax(dim=1)
         )
 
