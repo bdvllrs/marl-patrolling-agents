@@ -44,6 +44,8 @@ class AgentMADDPG(Agent):
             if no_exploration or p > eps_threshold:
                 action_probs = self.policy_actor(state).detach().cpu().numpy()
                 action = np.argmax(action_probs[0])
+            elif config.learning.gumber_softmax:
+                action = gumbel_softmax(self.policy_actor(state), hard=True).max(1)[1].detach().cpu().numpy()[0]
             else:
                 action = random.randrange(self.number_actions)
         self.steps_done += 1
