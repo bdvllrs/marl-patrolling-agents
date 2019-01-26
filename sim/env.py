@@ -196,7 +196,8 @@ class Env:
             x, y, z = positions[3 * i], positions[3 * i + 1], positions[3 * i + 2]
             for j, other_agent in enumerate(self.agents):
                 x_2, y_2, z_2 = positions[3 * j], positions[3 * j + 1], positions[3 * j + 2]
-                if agent.type != other_agent.type and x == x_2 and y == y_2 and z == z_2:
+                distance = np.linalg.norm([x_2 - x, y_2 - y, z_2 - z])
+                if agent.type != other_agent.type and distance < self.possible_location_values[1]:
                     n_collisions += 1
         return n_collisions // 2
 
