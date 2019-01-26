@@ -57,8 +57,9 @@ def train(env, agents, memory, metrics, action_dim, config, agents_type="dqn"):
     all_states = []
     all_next_states = []
     all_actions = []
+    all_types = []
 
-    states = env.reset()
+    states, types = env.reset()
     terminal = False
     step_k = 0
     while not terminal:
@@ -66,7 +67,8 @@ def train(env, agents, memory, metrics, action_dim, config, agents_type="dqn"):
         for i in range(len(agents)):
             action = agents[i].draw_action(states[i])
             actions.append(action)
-        next_states, rewards, terminal, n_collisions = env.step(states, actions)
+        all_types.append(types)
+        next_states, rewards, terminal, n_collisions, types = env.step(states, actions)
         all_rewards.append(rewards)
         all_states.append(states)
         all_next_states.append(next_states)
@@ -98,20 +100,22 @@ def train(env, agents, memory, metrics, action_dim, config, agents_type="dqn"):
 
         states = next_states
 
-    return all_states, all_next_states, all_rewards, all_actions
+    return all_states, all_next_states, all_rewards, all_actions, all_types
 
 
 def test(env, agents, collision_metric, metrics, config):
     all_states = []
     all_rewards = []
-    states = env.reset(test=True)
+    all_types = []
+    states, types = env.reset(test=True)
     terminal = False
     while not terminal:
         actions = []
         for i in range(len(agents)):
             action = agents[i].draw_action(states[i], no_exploration=True)
             actions.append(action)
-        next_states, rewards, terminal, n_collisions = env.step(states, actions)
+        all_types.append(types)
+        next_states, rewards, terminal, n_collisions, types = env.step(states, actions)
         collision_metric.add_collision_count(n_collisions)
         all_rewards.append(rewards)
         all_states.append(states)
@@ -123,5 +127,5 @@ def test(env, agents, collision_metric, metrics, config):
         reward = [all_rewards[i][k] for i in range(len(all_rewards))]
         discounted_return = compute_discounted_return(config.agents.gamma, reward)
         metrics[k].add_return(discounted_return)
-    return all_states, all_rewards
+    return all_states, all_rewards, all_types
 

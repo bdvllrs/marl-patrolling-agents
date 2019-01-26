@@ -219,14 +219,16 @@ class Env:
             absolute_positions.append(position[1])
             absolute_positions.append(position[2])
         # Define the initial states
+        types = [agent.type for agent in self.agents]
         if self.config.env.magic_switch:
             self.magic_switch = self._get_random_position()[:2]
             for k in range(len(self.agents)):
                 if not test:
-                    self.agents[k].type = "predator" if self.initial_types[k] == "prey" else "prey"
+                    self.agents[k].type = "predator" if self.agents[k].type == "prey" else "prey"
                 else:
                     self.agents[k].type = self.initial_types[k]
-        return self._get_state_from_positions(absolute_positions)
+                types[k] = self.agents[k].type
+        return self._get_state_from_positions(absolute_positions), types
 
     def step(self, prev_states, actions):
         """
@@ -251,13 +253,14 @@ class Env:
         # Determine rewards
         border_positions = [self.possible_location_values[0], self.possible_location_values[-1]]
         rewards = reward_full(positions, self.agents, border_positions, self.current_iteration)
+        types = [agent.type for agent in self.agents]
         self.current_iteration += 1
         terminal = False
         if self.current_iteration == self.max_iterations:
             terminal = True
-        return next_state, rewards, terminal, n_colisions
+        return next_state, rewards, terminal, n_colisions, types
 
-    def plot(self, state, rewards, ax):
+    def plot(self, state, types, rewards, ax):
         # Add obstacles
         tick_labels = np.arange(0, self.board_size)
         ax.set_xticks(self.possible_location_values)
@@ -305,4 +308,4 @@ class Env:
             else:
                 position = state[0][3 * k], state[0][3 * k + 1]
             radius = self.config.env.plot_radius_3D if self.config.env.world_3D else self.plot_radius
-            self.agents[k].plot(position, rewards[k], radius, ax)
+            self.agents[k].plot(position, types[k], rewards[k], radius, ax)

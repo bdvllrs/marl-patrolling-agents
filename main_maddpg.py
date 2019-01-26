@@ -83,7 +83,7 @@ for episode in range(config.learning.n_episodes):
 
     # Plot step
     if not episode % config.learning.plot_episodes_every or not episode % config.learning.save_episodes_every:
-        all_states, all_rewards = test(env, agents, collision_metric, metrics, config)
+        all_states, all_rewards, all_types = test(env, agents, collision_metric, metrics, config)
 
         # Make path for episode images
         if not episode % config.learning.save_episodes_every and config.save_build:
@@ -91,10 +91,10 @@ for episode in range(config.learning.n_episodes):
             os.mkdir(path_figure_episode)
 
         # Plot last test episode
-        for k, (states, rewards) in enumerate(zip(all_states, all_rewards)):
+        for k, (states, rewards, types) in enumerate(zip(all_states, all_rewards, all_types)):
             # Plot environment
             ax_board.cla()
-            env.plot(states, rewards, ax_board)
+            env.plot(states, types, rewards, ax_board)
             plt.draw()
             if not episode % config.learning.save_episodes_every and config.save_build:
                 fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(k)))
@@ -102,8 +102,8 @@ for episode in range(config.learning.n_episodes):
             if not episode % config.learning.plot_episodes_every:
                 plt.pause(0.001)
 
-    all_states, all_next_states, all_rewards, all_actions = train(env, agents, shared_memory,
-                                                                  metrics, action_dim, config, agents_type="maddpg")
+    all_states, all_next_states, all_rewards, all_actions, _ = train(env, agents, shared_memory,
+                                                                     metrics, action_dim, config, agents_type="maddpg")
 
     # Plot learning curves
     if not episode % config.learning.plot_curves_every:

@@ -68,16 +68,16 @@ class Agent:
         elif self.update_type == "soft":
             soft_update(*params)
 
-    def plot(self, position, reward, radius, ax: Union[plt.Axes, Axes3D]):
+    def plot(self, position, agent_type, reward, radius, ax: Union[plt.Axes, Axes3D]):
         if len(position) == 2:
             x, y = position
-            circle = plt.Circle((x, y), radius=radius, color=self.colors[self.type])
+            circle = plt.Circle((x, y), radius=radius, color=self.colors[agent_type])
             ax.add_artist(circle)
             ax.text(x - radius / 2, y, self.id)
             ax.text(x - radius / 2, y - 0.05, "Reward: {}".format(round(reward, 3)))
         else:  # 3D
             x, y, z = position
-            ax.scatter(x, y, z, s=radius, c=self.colors[self.type], marker="o")
+            ax.scatter(x, y, z, s=radius, c=self.colors[agent_type], marker="o")
             ax.text(x, y, z, self.id + "(r = {})".format(round(reward, 3)))
             ax.set_zlim3d(0, 1)
             ax.set_ylim3d(0, 1)

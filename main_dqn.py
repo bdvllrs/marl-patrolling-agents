@@ -30,7 +30,6 @@ if config.save_build:
     os.makedirs(path_figure)
     shutil.copytree(os.path.abspath('config/'), os.path.join(root_path, 'config'))
 
-
 number_agents = config.agents.number_predators + config.agents.number_preys
 # Definition of the agents
 agents = [AgentDQN("predator", "predator-{}".format(k), device, config.agents)
@@ -64,7 +63,6 @@ if config.env.world_3D:
 else:
     ax_board = fig_board.gca()
 
-
 fig_losses_returns, (ax_losses, ax_returns, ax_collisions) = plt.subplots(3, 1, figsize=(20, 10))
 
 plt.show()
@@ -87,7 +85,7 @@ for episode in range(config.learning.n_episodes):
 
     # Plot step
     if not episode % config.learning.plot_episodes_every or not episode % config.learning.save_episodes_every:
-        all_states, all_rewards = test(env, agents, collision_metric, metrics, config)
+        all_states, all_rewards, all_types = test(env, agents, collision_metric, metrics, config)
 
         # Make path for episode images
         if not episode % config.learning.save_episodes_every and config.save_build:
@@ -95,10 +93,10 @@ for episode in range(config.learning.n_episodes):
             os.mkdir(path_figure_episode)
 
         # Plot last test episode
-        for k, (states, rewards) in enumerate(zip(all_states, all_rewards)):
+        for k, (states, rewards, types) in enumerate(zip(all_states, all_rewards, all_types)):
             # Plot environment
             ax_board.cla()
-            env.plot(states, rewards, ax_board)
+            env.plot(states, types, rewards, ax_board)
             plt.draw()
             if not episode % config.learning.save_episodes_every and config.save_build:
                 fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(k)))
@@ -106,8 +104,8 @@ for episode in range(config.learning.n_episodes):
             if not episode % config.learning.plot_episodes_every:
                 plt.pause(0.001)
 
-    all_states, all_next_states, all_rewards, all_actions = train(env, agents, memory,
-                                                                  metrics, action_dim, config)
+    all_states, all_next_states, all_rewards, all_actions, _ = train(env, agents, memory,
+                                                                     metrics, action_dim, config)
 
     # Plot learning curves
     if not episode % config.learning.plot_curves_every:
@@ -140,4 +138,3 @@ for episode in range(config.learning.n_episodes):
 
     progress_bar.update(1)
 progress_bar.close()
-
