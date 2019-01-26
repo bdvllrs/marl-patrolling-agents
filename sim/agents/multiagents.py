@@ -86,6 +86,8 @@ class AgentMADDPG(Agent):
 
         loss.backward()
 
+        torch.nn.utils.clip_grad_norm_(self.policy_critic.parameters(), 1)
+
         self.critic_optimizer.step()
 
         if not self.steps_done % config.agents.soft_update_frequency:
@@ -107,13 +109,16 @@ class AgentMADDPG(Agent):
             if a == self.current_agent_idx:
                 policy_actions.append(predicted_action)
             else:
-                policy_actions.append(action_batch[:, a])
+                if config.learning.gumbel_softmax:
+                    action = F.gumbel_softmax(action_batch[:, a], tau=config.learning.gumbel_softmax_tau)
+                else:
+                    action = action_batch[:, a]
+                policy_actions.append(action)
 
         actor_loss = -self.policy_critic(state_batch, policy_actions)
         actor_loss = actor_loss.mean()
         actor_loss.backward()
 
-        torch.nn.utils.clip_grad_norm_(self.policy_critic.parameters(), 1)
         torch.nn.utils.clip_grad_norm_(self.policy_actor.parameters(), 1)
 
         self.actor_optimizer.step()
