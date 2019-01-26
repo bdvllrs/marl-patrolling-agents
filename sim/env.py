@@ -252,7 +252,7 @@ class Env:
         next_state = self._get_state_from_positions(positions)
         # Determine rewards
         border_positions = [self.possible_location_values[0], self.possible_location_values[-1]]
-        rewards = reward_full(positions, self.agents, border_positions, self.current_iteration)
+        rewards = reward_full(positions, self.agents, border_positions, self.obstacles, self.current_iteration)
         types = [agent.type for agent in self.agents]
         self.current_iteration += 1
         terminal = False

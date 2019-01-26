@@ -7,7 +7,7 @@ from utils import get_enemy_positions
 config = Config('./config')
 
 
-def reward_full(observations, agents: List[Agent], border_positions, t):
+def reward_full(observations, agents: List[Agent], border_positions, obstacles, t):
     """
     give all the rewards
     :param observations: all board
@@ -44,6 +44,8 @@ def reward_full(observations, agents: List[Agent], border_positions, t):
             if hot_walls:  # If agent touches the borders, gets a penalty
                 x, y, z = observations[3 * idx], observations[3 * idx + 1], observations[3 * idx + 2]
                 if x in border_positions or y in border_positions or (config.env.world_3D and z in border_positions):
+                    all_rewards[idx] = -1
+                elif (x+1, y) in obstacles or (x-1, y) in obstacles or (x, y+1) in obstacles or (x, y-1) in obstacles:
                     all_rewards[idx] = -1
 
     return all_rewards
