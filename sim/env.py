@@ -200,7 +200,7 @@ class Env:
                     n_collisions += 1
         return n_collisions // 2
 
-    def reset(self):
+    def reset(self, test=False):
         """
         Returns: State for each agent. Size is (number_agents, 4 * number_agents)
             for each agent, the state is the positions [x_1, y_1, x_2, y_2, ..., x_n, y_n]
@@ -222,7 +222,10 @@ class Env:
         if self.config.env.magic_switch:
             self.magic_switch = self._get_random_position()[:2]
             for k in range(len(self.agents)):
-                self.agents[k].type = self.initial_types[k]
+                if not test:
+                    self.agents[k].type = "predator" if self.initial_types[k] == "prey" else "prey"
+                else:
+                    self.agents[k].type = self.initial_types[k]
         return self._get_state_from_positions(absolute_positions)
 
     def step(self, prev_states, actions):

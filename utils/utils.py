@@ -1,5 +1,7 @@
+import numpy as np
 import torch
 from typing import List, Tuple
+from sim.agents import AgentMADDPG, AgentDQN
 
 
 def compute_discounted_return(gamma, rewards):
@@ -43,3 +45,83 @@ def to_onehot(values, max):
 
     """
     return torch.zeros(values.size(0), max).type_as(values).scatter_(1, values, 1).to(torch.float)
+
+
+def np_to_onehot(values, max):
+    onehot = np.zeros((len(values), max))
+    onehot[np.arange(len(values)), values] = 1
+    return onehot
+
+
+def train(env, agents, memory, metrics, action_dim, config):
+    all_rewards = []
+    all_states = []
+    all_next_states = []
+    all_actions = []
+
+    states = env.reset()
+    terminal = False
+    step_k = 0
+    while not terminal:
+        actions = []
+        for i in range(len(agents)):
+            action = agents[i].draw_action(states[i])
+            actions.append(action)
+        next_states, rewards, terminal, n_collisions = env.step(states, actions)
+        all_rewards.append(rewards)
+        all_states.append(states)
+        all_next_states.append(next_states)
+
+        all_actions.append(actions)
+        step_k += 1
+
+        actions = np_to_onehot(actions, action_dim)
+        memory.add(states, next_states, actions, rewards)
+
+        # Learning step
+        # Get batch for learning (batch_size x n_agents x dim)
+        batch = memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
+
+        if batch is not None:
+            if type(agents[0]) == AgentMADDPG:
+                for k in range(len(agents)):
+                    loss_critic = agents[k].learn_critic(batch)
+                    metrics[k].add_loss(loss_critic)
+                for k in range(len(agents)):
+                    loss_actor = agents[k].learn_actor(batch)
+                    metrics[k].add_loss_actor(loss_actor)
+            else:
+                for k in range(len(agents)):
+                    batch = batch[0][k], batch[1][k], batch[2][k], batch[3][k]
+                    loss = agents[k].learn(batch)
+                    metrics[k].add_loss(loss)
+
+        states = next_states
+
+    return all_states, all_next_states, all_rewards, all_actions
+
+
+def test(env, agents, collision_metric, metrics, config):
+    all_states = []
+    all_rewards = []
+    states = env.reset(test=True)
+    terminal = False
+    while not terminal:
+        actions = []
+        for i in range(len(agents)):
+            action = agents[i].draw_action(states[i], no_exploration=True)
+            actions.append(action)
+        next_states, rewards, terminal, n_collisions = env.step(states, actions)
+        collision_metric.add_collision_count(n_collisions)
+        all_rewards.append(rewards)
+        all_states.append(states)
+
+        states = next_states
+
+    # Compute discounted return of the episode
+    for k in range(len(agents)):
+        reward = [all_rewards[i][k] for i in range(len(all_rewards))]
+        discounted_return = compute_discounted_return(config.agents.gamma, reward)
+        metrics[k].add_return(discounted_return)
+    return all_states, all_rewards
+

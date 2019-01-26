@@ -125,5 +125,5 @@ def distance_reward_predator(dx, dy, dz):
     Returns: Reward = $\exp(-c \cdot d^2)$
     """
     distance = np.linalg.norm([dx, dy, dz])
-    rw = -1 + 2 * np.exp(-config.reward.coef_distance_reward_predator * distance * distance)
+    rw = np.exp(-config.reward.coef_distance_reward_predator * distance * distance)
     return rw, distance

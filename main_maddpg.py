@@ -9,12 +9,11 @@ import torch
 import numpy as np
 from sim import Env, ReplayMemory
 from sim.agents.multiagents import AgentMADDPG
-from utils import Config, Metrics, compute_discounted_return
+from utils import Config, Metrics, compute_discounted_return, train, test
 
 plt.ion()
 
 config = Config('config/')
-
 
 device_type = "cuda" if torch.cuda.is_available() and config.learning.cuda else "cpu"
 device = torch.device(device_type)
@@ -55,17 +54,19 @@ shared_memory = ReplayMemory(config.replay_memory.size)
 # Add agents to the environment
 for idx, agent in enumerate(agents):
     env.add_agent(agent, position=None)
+    agent.add_agents(agents, idx)
 
-fig_board = plt.figure(0)
+fig_board = plt.figure(0, figsize=(10, 10))
 if config.env.world_3D:
     ax_board = fig_board.gca(projection="3d")
 else:
     ax_board = fig_board.gca()
 
-fig_losses_returns, ((ax_losses, ax_losses_actor), (ax_returns, ax_collisions)) = plt.subplots(2, 2)
+fig_losses_returns, ((ax_losses, ax_losses_actor), (ax_returns, ax_collisions)) = plt.subplots(2, 2, figsize=(20, 10))
 
 plt.show()
 
+action_dim = 7 if config.env.world_3D else 5
 start = time.time()
 path_figure_episode = None
 progress_bar = None
@@ -74,60 +75,35 @@ for episode in range(config.learning.n_episodes):
         if progress_bar is not None:
             progress_bar.close()
         progress_bar = tqdm(total=config.learning.plot_episodes_every)
-    test_step = False
-    if not episode % config.learning.plot_episodes_every:
-        test_step = True
-    if not episode % config.learning.save_episodes_every and config.save_build:
-        path_figure_episode = os.path.join(path_figure, "episode-{}".format(episode))
-        os.mkdir(path_figure_episode)
-    all_rewards = []
-    states = env.reset()
-    terminal = False
-    step_k = 0
-    while not terminal:
-        actions = []
-        for i in range(len(agents)):
-            action = agents[i].draw_action(states[i], no_exploration=test_step)
-            actions.append(action)
-        next_states, rewards, terminal, n_collisions = env.step(states, actions)
-        collision_metric.add_collision_count(n_collisions)
-        all_rewards.append(rewards)
 
-        if not episode % config.learning.plot_episodes_every or not episode % config.learning.save_episodes_every:
+    # Test step
+    if not episode % config.learning.test_every:
+        for test_episode in range(config.learning.n_episode_in_test):
+            test(env, agents, collision_metric, metrics, config)
+
+    # Plot step
+    if not episode % config.learning.plot_episodes_every or not episode % config.learning.save_episodes_every:
+        all_states, all_rewards = test(env, agents, collision_metric, metrics, config)
+
+        # Make path for episode images
+        if not episode % config.learning.save_episodes_every and config.save_build:
+            path_figure_episode = os.path.join(path_figure, "episode-{}".format(episode))
+            os.mkdir(path_figure_episode)
+
+        # Plot last test episode
+        for k, (states, rewards) in enumerate(zip(all_states, all_rewards)):
             # Plot environment
             ax_board.cla()
             env.plot(states, rewards, ax_board)
             plt.draw()
             if not episode % config.learning.save_episodes_every and config.save_build:
-                fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(step_k)))
+                fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(k)))
                 fig_losses_returns.savefig(os.path.join(path_figure, "losses.eps"), dpi=1000, format="eps")
             if not episode % config.learning.plot_episodes_every:
                 plt.pause(0.001)
 
-        step_k += 1
-
-        shared_memory.add(states, next_states, actions, rewards)
-
-        # Learning step
-        # Get batch for learning (batch_size x n_agents x dim)
-        batch = shared_memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
-        target_actors = [agents[k].target_actor for k in range(len(agents))]
-
-        if batch is not None:
-            for k in range(len(agents)):
-                loss_critic = agents[k].learn_critic(batch, target_actors, k)
-                metrics[k].add_loss(loss_critic)
-            for k in range(len(agents)):
-                loss_actor = agents[k].learn_actor(batch, target_actors, k)
-                metrics[k].add_loss_actor(loss_actor)
-
-        states = next_states
-
-    # Compute discounted return of the episode
-    for k in range(len(agents)):
-        reward = [all_rewards[i][k] for i in range(len(all_rewards))]
-        discounted_return = compute_discounted_return(config.agents.gamma, reward)
-        metrics[k].add_return(discounted_return)
+    all_states, all_next_states, all_rewards, all_actions = train(env, agents, shared_memory,
+                                                                  metrics, action_dim, config)
 
     # Plot learning curves
     if not episode % config.learning.plot_curves_every:
@@ -136,6 +112,7 @@ for episode in range(config.learning.n_episodes):
         ax_losses.cla()
         ax_returns.cla()
         ax_losses_actor.cla()
+        ax_collisions.cla()
         for k in range(len(agents)):
             metrics[k].compute_averages()
 

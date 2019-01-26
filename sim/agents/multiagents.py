@@ -34,8 +34,14 @@ class AgentMADDPG(Agent):
         self.target_actor.eval()
 
         self.steps_done = 0
+        self.agents = None
+        self.current_agent_idx = None
 
-    def draw_action(self, state, no_exploration):
+    def add_agents(self, agents, idx):
+        self.agents = agents
+        self.current_agent_idx = idx
+
+    def draw_action(self, state, no_exploration=False):
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(
             -1. * self.steps_done / self.EPS_DECAY)
         with torch.no_grad():
@@ -51,31 +57,31 @@ class AgentMADDPG(Agent):
         self.steps_done += 1
         return action
 
-    def learn_critic(self, batch, target_actors, idx):
+    def learn_critic(self, batch):
         """
-
         :param batch:
         :return:
         """
         state_batch, next_state_batch, action_batch, reward_batch = batch
 
-        state_batch = torch.FloatTensor(state_batch[:, idx]).to(self.device)  # batch x agents x dim
-        next_state_batch = torch.FloatTensor(next_state_batch[:, idx]).to(self.device)
-        action_batch = torch.FloatTensor(action_batch).to(self.device).unsqueeze(2)  # batch x agents x 1
-        reward_batch = torch.FloatTensor(reward_batch[:, idx]).to(self.device)  # batch x dim
+        state_batch = torch.FloatTensor(state_batch[:, self.current_agent_idx]).to(self.device)  # batch x dim
+        next_state_batch = torch.FloatTensor(next_state_batch[:, self.current_agent_idx]).to(self.device)
+        action_batch = torch.FloatTensor(action_batch).to(self.device)  # batch x agents x action_dim
+        reward_batch = torch.FloatTensor(reward_batch[:, self.current_agent_idx]).to(self.device)  # batch x 1
+
+        # Add random noise
+        action_batch = action_batch + torch.normal(torch.zeros_like(action_batch),
+                                                   torch.zeros_like(action_batch).fill_(0.1))
+        action_batch = torch.clamp(action_batch, 0, 1)
 
         self.critic_optimizer.zero_grad()
 
-        action_dim = 7 if config.env.world_3D else 5
-
         target_actions = []
         policy_actions = []
-        for a in range(len(target_actors)):
-            target_action = target_actors[a](next_state_batch).max(1)[1].unsqueeze(1).to(torch.float)
-            # onehot_target_action = to_onehot(target_action, action_dim)
-            # onehot_policy_action = to_onehot(action_batch[:, a], action_dim)
-            target_actions.append(target_action / float(action_dim))
-            policy_actions.append(action_batch[:, a] / float(action_dim))
+        for a in range(len(self.agents)):
+            target_action = self.agents[a].target_actor(next_state_batch)
+            target_actions.append(target_action)
+            policy_actions.append(action_batch[:, a])
 
         predicted_q = self.policy_critic(state_batch, policy_actions)  # dim (batch_size x 1)
         target_q = reward_batch + self.gamma * self.target_critic(next_state_batch, target_actions)
@@ -91,23 +97,21 @@ class AgentMADDPG(Agent):
 
         return loss.detach().cpu().item()
 
-    def learn_actor(self, batch, target_actors, idx):
+    def learn_actor(self, batch):
         state_batch, next_state_batch, action_batch, reward_batch = batch
 
-        state_batch = torch.FloatTensor(state_batch[:, idx]).to(self.device)  # batch x agents x dim
-        action_batch = torch.FloatTensor(action_batch).to(self.device).unsqueeze(2)  # batch x agents x 1
-
-        action_dim = 7 if config.env.world_3D else 5
+        state_batch = torch.FloatTensor(state_batch[:, self.current_agent_idx]).to(self.device)  # batch  x dim
+        action_batch = torch.FloatTensor(action_batch).to(self.device)  # batch x agents x action_dim
 
         self.actor_optimizer.zero_grad()
-        predicted_action = self.policy_actor(state_batch).max(1)[1].unsqueeze(1)
-        cloned_action_batch = action_batch.clone()
-        cloned_action_batch[:, idx] = predicted_action
+        predicted_action = self.policy_actor(state_batch)
 
         policy_actions = []
-        for a in range(len(target_actors)):
-            # onehot_policy_action = to_onehot(cloned_action_batch[:, a], action_dim)
-            policy_actions.append(cloned_action_batch[:, a] / float(action_dim))
+        for a in range(len(self.agents)):
+            if a == self.current_agent_idx:
+                policy_actions.append(predicted_action)
+            else:
+                policy_actions.append(action_batch[:, a])
 
         actor_loss = -self.policy_critic(state_batch, policy_actions)
         actor_loss = actor_loss.mean()
