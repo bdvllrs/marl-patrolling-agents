@@ -10,7 +10,7 @@ import torch
 import numpy as np
 from sim import Env, ReplayMemory
 from sim.agents.agents import AgentDQN
-from utils import Config, Metrics, compute_discounted_return, train, test
+from utils import Config, Metrics, compute_discounted_return, train, test, make_gif
 
 plt.ion()
 
@@ -87,22 +87,20 @@ for episode in range(config.learning.n_episodes):
     if not episode % config.learning.plot_episodes_every or not episode % config.learning.save_episodes_every:
         all_states, all_rewards, all_types = test(env, agents, collision_metric, metrics, config)
 
-        # Make path for episode images
-        if not episode % config.learning.save_episodes_every and config.save_build:
-            path_figure_episode = os.path.join(path_figure, "episode-{}".format(episode))
-            os.mkdir(path_figure_episode)
-
         # Plot last test episode
-        for k, (states, rewards, types) in enumerate(zip(all_states, all_rewards, all_types)):
-            # Plot environment
-            ax_board.cla()
-            env.plot(states, types, rewards, ax_board)
-            plt.draw()
-            if not episode % config.learning.save_episodes_every and config.save_build:
-                fig_board.savefig(os.path.join(path_figure_episode, "frame-{}.jpg".format(k)))
-                fig_losses_returns.savefig(os.path.join(path_figure, "losses.eps"), dpi=1000, format="eps")
-            if not episode % config.learning.plot_episodes_every:
-                plt.pause(0.001)
+        if episode % config.learning.save_episodes_every or not config.save_build:
+            for k, (states, rewards, types) in enumerate(zip(all_states, all_rewards, all_types)):
+                # Plot environment
+                ax_board.cla()
+                env.plot(states, types, rewards, ax_board)
+                plt.draw()
+                if not episode % config.learning.plot_episodes_every:
+                    plt.pause(0.001)
+
+        if not episode % config.learning.save_episodes_every and config.save_build:
+            animation = make_gif(env, fig_board, ax_board, all_states, all_rewards, all_types)
+            animation.save(os.path.join(path_figure, "episode-{}.gif".format(episode)), dpi=100, writer="imagemagick")
+            fig_losses_returns.savefig(os.path.join(path_figure, "losses.eps"), dpi=1000, format="eps")
 
     all_states, all_next_states, all_rewards, all_actions, _ = train(env, agents, memory,
                                                                      metrics, action_dim, config)

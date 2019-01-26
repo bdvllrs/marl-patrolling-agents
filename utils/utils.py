@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from typing import List, Tuple
+from matplotlib.animation import FuncAnimation
 
 
 def compute_discounted_return(gamma, rewards):
@@ -129,3 +130,10 @@ def test(env, agents, collision_metric, metrics, config):
         metrics[k].add_return(discounted_return)
     return all_states, all_rewards, all_types
 
+
+def make_gif(env, fig, ax, states, rewards, types):
+    def update(k):
+        ax.cla()
+        env.plot(states[k], types[k], rewards[k], ax)
+
+    return FuncAnimation(fig, update, frames=np.arange(0, len(states)), interval=80)
