@@ -57,7 +57,7 @@ class DQNCritic(nn.Module):
         Returns:
         """
         x = torch.cat([x, *actions], dim=1)
-        return F.gumbel_softmax(self.fc(x), tau=config.learning.gumbel_softmax_tau)
+        return self.fc(x)
 
 
 class DQNActor(nn.Module):
@@ -79,4 +79,4 @@ class DQNActor(nn.Module):
         )
 
     def forward(self, x):
-        return self.fc(x)
+        return F.gumbel_softmax(self.fc(x), tau=config.learning.gumbel_softmax_tau)

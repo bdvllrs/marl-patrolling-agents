@@ -48,7 +48,7 @@ learning:
   save_folder: ./builds/
   DDQN: Yes
   tau: 0.01
-  gumbel_softmax: Yes
+  gumbel_softmax: No
   gumbel_softmax_tau: 0.5
 
   plot_episodes_every: 100
