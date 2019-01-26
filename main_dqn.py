@@ -121,7 +121,7 @@ for episode in range(config.learning.n_episodes):
 
             metrics[k].plot_losses(episode, ax_losses, legend=agents[k].id)
             metrics[k].plot_returns(episode, ax_returns, legend=agents[k].id)
-            ax_losses.set_title("Losses critic")
+            ax_losses.set_title("Losses")
             ax_losses.legend()
             ax_returns.set_title("Returns")
             ax_returns.legend()

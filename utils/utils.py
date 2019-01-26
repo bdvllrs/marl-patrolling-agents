@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from typing import List, Tuple
-from sim.agents import AgentMADDPG, AgentDQN
 
 
 def compute_discounted_return(gamma, rewards):
@@ -53,7 +52,7 @@ def np_to_onehot(values, max):
     return onehot
 
 
-def train(env, agents, memory, metrics, action_dim, config):
+def train(env, agents, memory, metrics, action_dim, config, agents_type="dqn"):
     all_rewards = []
     all_states = []
     all_next_states = []
@@ -75,7 +74,9 @@ def train(env, agents, memory, metrics, action_dim, config):
         all_actions.append(actions)
         step_k += 1
 
-        actions = np_to_onehot(actions, action_dim)
+        if agents_type == "maddpg":
+            actions = np_to_onehot(actions, action_dim)
+
         memory.add(states, next_states, actions, rewards)
 
         # Learning step
@@ -83,7 +84,7 @@ def train(env, agents, memory, metrics, action_dim, config):
         batch = memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
 
         if batch is not None:
-            if type(agents[0]) == AgentMADDPG:
+            if agents_type == 'maddpg':
                 for k in range(len(agents)):
                     loss_critic = agents[k].learn_critic(batch)
                     metrics[k].add_loss(loss_critic)
@@ -92,8 +93,7 @@ def train(env, agents, memory, metrics, action_dim, config):
                     metrics[k].add_loss_actor(loss_actor)
             else:
                 for k in range(len(agents)):
-                    batch = batch[0][k], batch[1][k], batch[2][k], batch[3][k]
-                    loss = agents[k].learn(batch)
+                    loss = agents[k].learn((batch[0][:, k], batch[1][:, k], batch[2][:, k], batch[3][:, k]))
                     metrics[k].add_loss(loss)
 
         states = next_states

@@ -13,7 +13,7 @@ class DQNUnit(nn.Module):
         n_actions = 7 if config.env.world_3D else 5
         self.n_agents = config.agents.number_preys + config.agents.number_predators
         n_obstacles = 2 * len(config.env.obstacles)
-        n_magic_switch = int(config.env.magic_switch) * 2 + self.n_agents
+        n_magic_switch = int(config.env.magic_switch) * (2 + self.n_agents)
         self.fc = nn.Sequential(
             nn.Linear(self.n_agents * 3 + n_obstacles + n_magic_switch, 512),
             nn.ReLU(),

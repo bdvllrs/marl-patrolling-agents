@@ -7,8 +7,8 @@ from torch.nn import functional as F
 from torch.optim import Adam
 
 from model.dqn import DQNCritic, DQNActor
-from sim.agents.agents import Agent, soft_update, hard_update
-from utils import Config, to_onehot
+from sim.agents.agents import Agent, soft_update
+from utils import Config
 from utils.misc import gumbel_softmax
 
 config = Config('./config')

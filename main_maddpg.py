@@ -103,7 +103,7 @@ for episode in range(config.learning.n_episodes):
                 plt.pause(0.001)
 
     all_states, all_next_states, all_rewards, all_actions = train(env, agents, shared_memory,
-                                                                  metrics, action_dim, config)
+                                                                  metrics, action_dim, config, agents_type="maddpg")
 
     # Plot learning curves
     if not episode % config.learning.plot_curves_every:
