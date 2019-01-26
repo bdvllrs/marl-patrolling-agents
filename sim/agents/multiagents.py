@@ -9,7 +9,6 @@ from torch.optim import Adam
 from model.dqn import DQNCritic, DQNActor
 from sim.agents.agents import Agent, soft_update
 from utils import Config
-from utils.misc import gumbel_softmax
 
 config = Config('./config')
 
@@ -50,8 +49,6 @@ class AgentMADDPG(Agent):
             if no_exploration or p > eps_threshold:
                 action_probs = self.policy_actor(state).detach().cpu().numpy()
                 action = np.argmax(action_probs[0])
-            elif config.learning.gumbel_softmax:
-                action = gumbel_softmax(self.policy_actor(state), hard=True).max(1)[1].detach().cpu().numpy()[0]
             else:
                 action = random.randrange(self.number_actions)
         self.steps_done += 1
@@ -69,11 +66,6 @@ class AgentMADDPG(Agent):
         action_batch = torch.FloatTensor(action_batch).to(self.device)  # batch x agents x action_dim
         reward_batch = torch.FloatTensor(reward_batch[:, self.current_agent_idx]).to(self.device)  # batch x 1
 
-        # Add random noise
-        action_batch = action_batch + torch.normal(torch.zeros_like(action_batch),
-                                                   torch.zeros_like(action_batch).fill_(0.1))
-        action_batch = torch.clamp(action_batch, 0, 1)
-
         self.critic_optimizer.zero_grad()
 
         target_actions = []
@@ -81,7 +73,11 @@ class AgentMADDPG(Agent):
         for a in range(len(self.agents)):
             target_action = self.agents[a].target_actor(next_state_batch)
             target_actions.append(target_action)
-            policy_actions.append(action_batch[:, a])
+            if config.learning.gumbel_softmax:
+                action = F.gumbel_softmax(action_batch[:, a], tau=config.learning.gumbel_softmax_tau)
+            else:
+                action = action_batch[:, a]
+            policy_actions.append(action)
 
         predicted_q = self.policy_critic(state_batch, policy_actions)  # dim (batch_size x 1)
         target_q = reward_batch + self.gamma * self.target_critic(next_state_batch, target_actions)

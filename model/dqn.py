@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from utils.config import Config
 
 config = Config('./config')
@@ -45,7 +46,7 @@ class DQNCritic(nn.Module):
             nn.ReLU(),
             nn.Linear(128, 32),
             nn.ReLU(),
-            nn.Linear(32, 1)
+            nn.Linear(32, 1),
         )
 
     def forward(self, x, actions):
@@ -56,7 +57,7 @@ class DQNCritic(nn.Module):
         Returns:
         """
         x = torch.cat([x, *actions], dim=1)
-        return self.fc(x)
+        return F.gumbel_softmax(self.fc(x), tau=config.learning.gumbel_softmax_tau)
 
 
 class DQNActor(nn.Module):
