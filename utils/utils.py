@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from typing import List, Tuple
+import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
@@ -135,5 +136,7 @@ def make_gif(env, fig, ax, states, rewards, types):
     def update(k):
         ax.cla()
         env.plot(states[k], types[k], rewards[k], ax)
+        plt.draw()
+        plt.pause(0.001)
 
     return FuncAnimation(fig, update, frames=np.arange(0, len(states)), interval=80)

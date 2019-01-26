@@ -88,7 +88,11 @@ for episode in range(config.learning.n_episodes):
         all_states, all_rewards, all_types = test(env, agents, collision_metric, metrics, config)
 
         # Plot last test episode
-        if episode % config.learning.save_episodes_every or not config.save_build:
+        if not episode % config.learning.save_episodes_every and config.save_build:
+            animation = make_gif(env, fig_board, ax_board, all_states, all_rewards, all_types)
+            animation.save(os.path.join(path_figure, "episode-{}.gif".format(episode)), dpi=100, writer="imagemagick")
+            fig_losses_returns.savefig(os.path.join(path_figure, "losses.eps"), dpi=1000, format="eps")
+        elif not config.save_build:
             for k, (states, rewards, types) in enumerate(zip(all_states, all_rewards, all_types)):
                 # Plot environment
                 ax_board.cla()
@@ -96,11 +100,6 @@ for episode in range(config.learning.n_episodes):
                 plt.draw()
                 if not episode % config.learning.plot_episodes_every:
                     plt.pause(0.001)
-
-        if not episode % config.learning.save_episodes_every and config.save_build:
-            animation = make_gif(env, fig_board, ax_board, all_states, all_rewards, all_types)
-            animation.save(os.path.join(path_figure, "episode-{}.gif".format(episode)), dpi=100, writer="imagemagick")
-            fig_losses_returns.savefig(os.path.join(path_figure, "losses.eps"), dpi=1000, format="eps")
 
     all_states, all_next_states, all_rewards, all_actions, _ = train(env, agents, memory,
                                                                      metrics, action_dim, config)
