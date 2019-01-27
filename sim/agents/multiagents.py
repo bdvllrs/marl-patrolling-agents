@@ -64,7 +64,7 @@ class AgentMADDPG(Agent):
         state_batch = torch.FloatTensor(state_batch[:, self.current_agent_idx]).to(self.device)  # batch x dim
         next_state_batch = torch.FloatTensor(next_state_batch[:, self.current_agent_idx]).to(self.device)
         action_batch = torch.FloatTensor(action_batch).to(self.device)  # batch x agents x action_dim
-        reward_batch = torch.FloatTensor(reward_batch[:, self.current_agent_idx]).to(self.device)  # batch x 1
+        reward_batch = torch.FloatTensor(reward_batch[:, self.current_agent_idx]).to(self.device).reshape(action_batch.size(0), 1)  # batch x 1
 
         self.critic_optimizer.zero_grad()
 
@@ -80,7 +80,8 @@ class AgentMADDPG(Agent):
             policy_actions.append(action)
 
         predicted_q = self.policy_critic(state_batch, policy_actions)  # dim (batch_size x 1)
-        target_q = reward_batch + self.gamma * self.target_critic(next_state_batch, target_actions)
+        target = self.target_critic(next_state_batch, target_actions)
+        target_q = reward_batch + self.gamma * target
 
         loss = F.mse_loss(predicted_q, target_q)
 
