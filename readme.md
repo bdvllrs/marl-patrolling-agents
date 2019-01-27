@@ -1,8 +1,8 @@
 # MARL for patrolling agents
 
-DDQN Normal 2vs1 | DDQN Obstacles 2vs1 | DDQN 3D 2vs1
+DDQN 2vs2 | MADDPG 2vs2 | DDQN 2v1 Magic Switch
 :---------:|:----------:|:-----------:
-![](gifs/normal.gif "DDQN Normal 2vs1") | ![](gifs/obstacles.gif "DDQN Obstacles 2vs1") | ![](gifs/3D.gif "DDQN 3D 2vs1")
+![](gifs/dqn-2v2.gif "DDQN 2vs2") | ![](gifs/maddpg_2v2.gif "MADDPG 2vs2") | ![](gifs/switch-dqn-2v1.gif "DDQN switch 2vs2")
 
 ## Objective:
 We have a board of size (`width`=100, `height`=100) where two kind of agents are evolving:
