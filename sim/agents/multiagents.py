@@ -33,6 +33,7 @@ class AgentMADDPG(Agent):
         self.target_actor.eval()
 
         self.steps_done = 0
+        self.n_iter = 0
         self.agents = None
         self.current_agent_idx = None
 
@@ -41,10 +42,14 @@ class AgentMADDPG(Agent):
         self.current_agent_idx = idx
 
     def draw_action(self, state, no_exploration=False):
-        eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(
-            -1. * self.steps_done / self.EPS_DECAY)
         with torch.no_grad():
             state = torch.tensor(state).to(self.device).unsqueeze(dim=0).reshape(1, -1)
+            #if config.learning.gumbel_softmax:
+            #    predicted = self.policy_actor(state).detach().cpu().numpy()[0]
+            #    action = np.random.choice(self.number_actions, p=predicted)
+            #else:
+            eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(
+                -1. * self.steps_done / self.EPS_DECAY)
             p = np.random.random()
             if no_exploration or p > eps_threshold:
                 action_probs = self.policy_actor(state).detach().cpu().numpy()
@@ -54,7 +59,7 @@ class AgentMADDPG(Agent):
         self.steps_done += 1
         return action
 
-    def learn_critic(self, batch):
+    def learn(self, batch):
         """
         :param batch:
         :return:
@@ -87,20 +92,16 @@ class AgentMADDPG(Agent):
 
         loss.backward()
 
-        torch.nn.utils.clip_grad_norm_(self.policy_critic.parameters(), 1)
+        # torch.nn.utils.clip_grad_norm_(self.policy_critic.parameters(), 1)
 
         self.critic_optimizer.step()
+        self.n_iter += 1
 
-        if not self.steps_done % config.agents.soft_update_frequency:
+        if not self.n_iter % config.agents.soft_update_frequency:
             soft_update(self.target_critic, self.policy_critic)
 
-        return loss.detach().cpu().item()
-
-    def learn_actor(self, batch):
-        state_batch, next_state_batch, action_batch, reward_batch = batch
-
-        state_batch = torch.FloatTensor(state_batch[:, self.current_agent_idx]).to(self.device)  # batch  x dim
-        action_batch = torch.FloatTensor(action_batch).to(self.device)  # batch x agents x action_dim
+        # Learn actor
+        self.policy_critic.eval()
 
         self.actor_optimizer.zero_grad()
         predicted_action = self.policy_actor(state_batch)
@@ -120,14 +121,18 @@ class AgentMADDPG(Agent):
         actor_loss = actor_loss.mean()
         actor_loss.backward()
 
-        torch.nn.utils.clip_grad_norm_(self.policy_actor.parameters(), 1)
+        # torch.nn.utils.clip_grad_norm_(self.policy_actor.parameters(), 1)
 
         self.actor_optimizer.step()
 
-        if not self.steps_done % config.agents.soft_update_frequency:
+        self.policy_critic.train()
+
+        if not self.n_iter % config.agents.soft_update_frequency:
             soft_update(self.target_actor, self.policy_actor)
 
-        return actor_loss.detach().cpu().item()
+        self.n_iter += 1
+
+        return loss.detach().cpu().item(), actor_loss.cpu().item()
 
     def save(self, name):
         """

@@ -11,7 +11,7 @@ agents:
   lr: 0.01 # Learning rate
   lr_actor: 0.001 # Learning rate for actor
   update_frequency: 20 # Update the target net every...
-  soft_update_frequency: 10 # Update the target net every...
+  soft_update_frequency: 50 # Update the target net every...
   update_type: soft # Type of update.
   hidden_size: 32
 
@@ -47,7 +47,7 @@ learning:
   batch_size: 200
   save_folder: ./builds/
   DDQN: Yes
-  tau: 0.01
+  tau: 0.5
   gumbel_softmax: No
   gumbel_softmax_tau: 0.5
 

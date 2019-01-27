@@ -52,9 +52,9 @@ for agent in agents:
 env = Env(config.env, config)
 shared_memory = ReplayMemory(config.replay_memory.size)
 # Add agents to the environment
-for idx, agent in enumerate(agents):
-    env.add_agent(agent, position=None)
-    agent.add_agents(agents, idx)
+for k in range(len(agents)):
+    env.add_agent(agents[k], position=None)
+    agents[k].add_agents(agents, k)
 
 fig_board = plt.figure(0, figsize=(10, 10))
 if config.env.world_3D:

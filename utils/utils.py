@@ -88,15 +88,12 @@ def train(env, agents, memory, metrics, action_dim, config, agents_type="dqn"):
         batch = memory.get_batch(config.learning.batch_size, shuffle=config.replay_memory.shuffle)
 
         if batch is not None:
-            if agents_type == 'maddpg':
-                for k in range(len(agents)):
-                    loss_critic = agents[k].learn_critic(batch)
+            for k in range(len(agents)):
+                if agents_type == 'maddpg':
+                    loss_critic, loss_actor = agents[k].learn(batch)
                     metrics[k].add_loss(loss_critic)
-                for k in range(len(agents)):
-                    loss_actor = agents[k].learn_actor(batch)
                     metrics[k].add_loss_actor(loss_actor)
-            else:
-                for k in range(len(agents)):
+                else:
                     loss = agents[k].learn((batch[0][:, k], batch[1][:, k], batch[2][:, k], batch[3][:, k]))
                     metrics[k].add_loss(loss)
 
