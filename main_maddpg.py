@@ -11,9 +11,13 @@ from sim import Env, ReplayMemory
 from sim.agents.multiagents import AgentMADDPG
 from utils import Config, Metrics, compute_discounted_return, train, test, make_gif
 
-plt.ion()
-
 config = Config('config/')
+
+if not config.save_build:
+    plt.ion()
+else:
+    plt.switch_backend('agg')
+
 
 device_type = "cuda" if torch.cuda.is_available() and config.learning.cuda else "cpu"
 device = torch.device(device_type)
