@@ -9,10 +9,11 @@ DDQN 2vs2 | MADDPG 2vs2 | DDQN 2v1 Magic Switch
 ## Evironment
 
 ### Action space
+The action space is discrete.
 Every agent can do one of `none`, `left`, `right`, `top`, `bottom`.
 
 ### State space
-The state is complete and everything is known by the agents.
+The state is perfectly known by all the agents.
 
 The state is the 3D coordinates (x, y, z) for every agent.
 
