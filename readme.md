@@ -1,6 +1,9 @@
 # MARL for patrolling agents
 
-## Examples after 1400 episodes of training
+We provide here an environment for a predator/prey game. We explore two methods: a simple DQN architecture as well as a true Multi-Agent algorithm architecture using a Policy Gradient approach: Multi-Agent Deep Deterministic Policy Gradient (Lowe, R., Wu, Y., Tamar, A., Harb, J., Abbeel, O. P., & Mordatch, I. (2017). Multi-agent actor-critic for mixed cooperative-competitive environments. In Advances in Neural Information Processing Systems (pp. 6379-6390)).
+
+## Some results
+After 1400 episodes of training.
 
 DDQN 2vs2 | MADDPG 2vs2 | DDQN 2v1 Magic Switch
 :---------:|:----------:|:-----------:
