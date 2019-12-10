@@ -1,0 +1,66 @@
+build_name: No
+save_build: No
+agents:
+  number_preys: 1
+  number_predators: 3
+  # For RL
+  gamma: 0.9 # Discount factor.
+  EPS_START: 0.9 # Probability of exploration.
+  EPS_END: 0.1
+  EPS_DECAY: 500000
+  lr: 0.01 # Learning rate
+  lr_actor: 0.001 # Learning rate for actor
+  update_frequency: 20 # Update the target net every...
+  soft_update_frequency: 1 # Update the target net every...
+  update_type: soft # Type of update.
+  hidden_size: 32
+
+replay_memory:
+  size: 10000 # Maximum size of the memory.
+  shuffle: Yes # If Yes, returns random batches among the elements in the memory. Else always the last ones.
+
+env:
+  noise: 0.001 # Agents' actions are not successful with this probability.
+  reward_type: full # Must be between full and sparse.
+  board_size: 15 # Size of the board
+  max_iterations: 50 # Number maximum of steps
+  plot_radius: 0.05
+
+  plot_radius_3D: 50 # In point
+
+  world_3D: No # If Yes, world is 3D
+  infinite_world: No # If Yes, transported to the other side of the board when crossing border.
+
+  state_image: No # If No, state is coordinate, else state is an image
+
+  obstacles: [[3, 2], [3, 3], [3, 4], [3, 5], [4, 5], [5, 5], [6, 5], [6, 4], [6, 3], [6, 2],
+              [8, 14], [8, 13], [8, 12], [8, 11], [8, 10], [8, 9], [8, 8], [8, 7], [9, 7], [10, 7], [11, 7],
+              [11, 12], [11, 11], [11, 10], [12, 10], [13, 10], [14, 10]]
+
+  magic_switch: Yes
+
+learning:
+  cuda: Yes # cuda or cpu
+  n_episodes: 500000 # Number of episodes
+  test_every: 100
+  n_episode_in_test: 50
+  batch_size: 200
+  save_folder: ./builds/
+  DDQN: Yes
+  tau: 0.01
+  gumbel_softmax: Yes
+
+  plot_episodes_every: 100
+  save_episodes_every: 100
+  plot_curves_every: 100
+
+  use_model: No # If we load a trained model
+  model_path: /path/to/model # path to the trained model
+
+reward:
+  coef_distance_reward_predator: 5
+  coef_distance_reward_prey: 5
+  hot_walls: No # If Yes, agents will lose reward if they are against the wall.
+
+  share_wins_among_predators: No # If one predator wins, other predator also get some reward
+  reward_if_predators_win: 0.4 # If share_wins_among_predator is Yes, how many reward to give to the other predators (in [-1, 1])

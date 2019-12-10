@@ -1,0 +1,39 @@
+build_name: dqn-2v1
+save_build: Yes
+agents:
+  number_preys: 1
+  number_predators: 2
+  # For RL
+  lr: 0.001 # Learning rate
+  lr_actor: 0.001 # Learning rate for actor
+  update_frequency: 20 # Update the target net every...
+  soft_update_frequency: 5 # Update the target net every...
+  update_type: soft # Type of update.
+
+learning:
+  cuda: Yes # cuda or cpu
+  batch_size: 200
+  DDQN: No
+
+  n_episodes: 100000 # Number of episodes
+
+  gumbel_softmax: No
+
+  plot_episodes_every: 300
+  save_episodes_every: 300
+  plot_curves_every: 100
+
+env:
+  obstacles: []
+  infinite_world: No # If Yes, transported to the other side of the board when crossing border.
+  magic_switch: No
+
+replay_memory:
+  size: 1000000 # Maximum size of the memory.
+
+reward:
+  coef_distance_reward_predator: 10
+  coef_distance_reward_prey: 10
+  share_wins_among_predators: Yes
+  hot_walls: No
+
